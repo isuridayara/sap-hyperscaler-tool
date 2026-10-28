@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>S/4HANA Hyperscaler Pathways</title>
+  <style>
+    /* Basic layout. Kept inside this file so there is no extra CSS file to manage. */
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0 auto; padding: 0 16px 32px; color: #222; background: #fff; max-width: 1100px; }
+    h1 { font-size: 1.5rem; margin: 20px 0 4px; }
+    h2 { font-size: 1.2rem; }
+    .subtitle { color: #555; margin: 0 0 16px; }
+    .scope { border-left: 4px solid #c58a00; background: #fff6df; padding: 10px 14px; margin: 0 0 20px; }
+    .scope h2 { margin: 0 0 8px; }
+    .scope p { margin: 6px 0; }
+    .demo-banner { display: none; background: #c00000; color: #fff; font-weight: bold; text-align: center; padding: 10px; margin: 0 -16px 16px; }
+    .status { color: #a00; }
+    fieldset { border: 1px solid #ccc; padding: 12px 16px; margin: 0 0 20px; }
+    legend { font-weight: bold; }
+    .form-row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin: 6px 0; }
+    .form-row label { min-width: 280px; }
+    .form-row input, .form-row select { padding: 4px; min-width: 160px; }
+    .tab-buttons { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid #335; }
+    .tab-buttons button { padding: 8px 14px; border: 1px solid #335; border-bottom: none; background: #eef; cursor: pointer; font-size: 0.95rem; }
+    .tab-buttons button.active { background: #335; color: #fff; }
+    .tab-panel { display: none; padding: 16px 0; }
+    .tab-panel.active { display: block; }
+    .placeholder { color: #777; font-style: italic; }
+    table { border-collapse: collapse; margin: 8px 0 16px; font-size: 0.9rem; }
+    th, td { border: 1px solid #bbb; padding: 4px 8px; text-align: left; }
+    th { background: #f0f0f5; }
+    td.num { text-align: right; }
+    .chart-box { max-width: 800px; }
+  </style>
+</head>
+<body>
+
+  <!-- Red banner. Hidden by default; app.js shows it when demo data (data/*_demo.csv) is loaded. -->
+  <div id="demo-banner" class="demo-banner">DEMO DATA - these are not real prices or scores</div>
+
+  <h1>S/4HANA on AWS, Microsoft Azure or Google Cloud</h1>
+  <p class="subtitle">A decision-support prototype. It shows where detailed evaluation effort is worth spending. It is not a pricing calculator, not a substitute for vendor sizing and not a full TCO model.</p>
+
+  <!-- Scope section required by the project brief. The same text is in README.md. -->
+  <section class="scope" id="what-this-tool-compares">
+    <h2>What this tool compares</h2>
+    <p><strong>Route A - SAP-managed bundle (SAP Cloud ERP Private, earlier RISE with SAP): EXCLUDED.</strong>
+      SAP runs the whole system for one negotiated price. There is no public price list, so no number for this route could be traced to a source.</p>
+    <p><strong>Route B - customer-managed: THIS IS WHAT THE TOOL COMPARES.</strong>
+      The company rents servers, storage and network from AWS, Microsoft Azure or Google Cloud and runs S/4HANA there with its own SAP licence. These prices are public and dated, so every number can be checked.</p>
+  </section>
+
+  <!-- Messages from app.js (for example "could not load data/prices_demo.csv"). -->
+  <p id="status" class="status"></p>
+
+  <!-- Input form: the company profile. app.js reads these fields when you press Calculate.
+       The values filled in below are an example profile, not real company data. -->
+  <form id="profile-form">
+    <fieldset>
+      <legend>Company profile (example values)</legend>
+      <div class="form-row">
+        <label for="hana-memory">SAP HANA memory size (GB)</label>
+        <input type="number" id="hana-memory" name="hanaMemoryGb" min="0" value="512">
+      </div>
+      <div class="form-row">
+        <label for="data-volume">SAP HANA data volume today (GB)</label>
+        <input type="number" id="data-volume" name="dataVolumeGb" min="0" value="400">
+      </div>
+      <div class="form-row">
+        <label for="growth">Data growth per year (%)</label>
+        <input type="number" id="growth" name="growthPct" min="0" max="100" value="10">
+      </div>
+      <div class="form-row">
+        <label for="network">Outbound network traffic (GB per month)</label>
+        <input type="number" id="network" name="networkGbMonth" min="0" value="500">
+      </div>
+      <div class="form-row">
+        <label for="years">Evaluation period (years)</label>
+        <input type="number" id="years" name="years" min="1" max="10" value="5">
+      </div>
+      <div class="form-row">
+        <label for="region">Region</label>
+        <select id="region" name="region">
+          <!-- Options are filled from the prices CSV by app.js. -->
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="discount">Discount scenario (%) - 0 means list price</label>
+        <input type="number" id="discount" name="discountPct" min="0" max="90" value="0">
+      </div>
+      <div class="form-row">
+        <label for="preset">Weight preset</label>
+        <select id="preset" name="preset">
+          <option value="cost">Cost-sensitive</option>
+          <option value="compliance">Compliance-sensitive</option>
+          <option value="user">User-defined</option>
+        </select>
+      </div>
+      <!-- Weight fields for the "User-defined" preset. app.js creates one field per criterion. -->
+      <div id="user-weights"></div>
+      <div class="form-row">
+        <button type="submit">Calculate</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <!-- The four result tabs. app.js switches between them. -->
+  <div class="tab-buttons" role="tablist">
+    <button type="button" class="active" data-tab="tab-cost">Cost comparison</button>
+    <button type="button" data-tab="tab-matrix">Criteria matrix</button>
+    <button type="button" data-tab="tab-result">Weighted result</button>
+    <button type="button" data-tab="tab-sensitivity">Sensitivity</button>
+  </div>
+
+  <section id="tab-cost" class="tab-panel active">
+    <h2>Cost comparison (EUR, low / base / high)</h2>
+    <div id="cost-table"><p class="placeholder">Not calculated yet.</p></div>
+    <div class="chart-box"><canvas id="cost-chart"></canvas></div>
+  </section>
+
+  <section id="tab-matrix" class="tab-panel">
+    <h2>Criteria matrix (score, source, confidence)</h2>
+    <div id="matrix-table"><p class="placeholder">Not calculated yet.</p></div>
+  </section>
+
+  <section id="tab-result" class="tab-panel">
+    <h2>Weighted result (ranking and contribution of each criterion)</h2>
+    <div id="weights-info"><p class="placeholder">Not calculated yet.</p></div>
+    <div id="result-table"></div>
+    <div class="chart-box"><canvas id="result-chart"></canvas></div>
+    <div id="topsis-table"></div>
+  </section>
+
+  <section id="tab-sensitivity" class="tab-panel">
+    <h2>Sensitivity and switch-points</h2>
+    <div class="form-row">
+      <label for="sens-criterion">Criterion whose weight is changed</label>
+      <select id="sens-criterion"></select>
+    </div>
+    <div id="switch-points"><p class="placeholder">Not calculated yet.</p></div>
+    <div class="chart-box"><canvas id="sens-chart"></canvas></div>
+  </section>
+
+  <!-- Libraries from cdnjs with fixed versions. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <!-- Our own code. app.js comes last because it uses the other three files. -->
+  <script src="js/cost.js"></script>
+  <script src="js/mcda.js"></script>
+  <script src="js/sensitivity.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
