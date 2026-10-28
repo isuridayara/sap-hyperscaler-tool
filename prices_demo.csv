@@ -1,0 +1,22 @@
+price_id,provider,service_category,service_name,spec,unit,unit_price,currency,region,pricing_model,discount_assumption,source_url,source_type,date_captured,notes
+D-AWS-C1,AWS,compute,DEMO compute 512 GB,512 GB RAM,hour,4.50,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AWS-C2,AWS,compute,DEMO compute 1024 GB,1024 GB RAM,hour,8.90,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AWS-S1,AWS,storage,DEMO block storage,SSD,GB-month,0.12,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AWS-B1,AWS,backup,DEMO backup storage,snapshot,GB-month,0.05,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AWS-N1,AWS,network,DEMO outbound traffic,internet egress,GB,0.09,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AWS-M1,AWS,managed,DEMO monitoring and support,basic,month,300,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AWS-O1,AWS,oneoff,DEMO migration setup,one project,one-off,20000,EUR,EU Frankfurt (demo),one-off,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AZ-C1,Microsoft Azure,compute,DEMO compute 512 GB,512 GB RAM,hour,4.20,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AZ-C2,Microsoft Azure,compute,DEMO compute 1024 GB,1024 GB RAM,hour,8.60,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AZ-S1,Microsoft Azure,storage,DEMO block storage,SSD,GB-month,0.13,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AZ-B1,Microsoft Azure,backup,DEMO backup storage,snapshot,GB-month,0.06,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AZ-N1,Microsoft Azure,network,DEMO outbound traffic,internet egress,GB,0.08,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AZ-M1,Microsoft Azure,managed,DEMO monitoring and support,basic,month,350,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-AZ-O1,Microsoft Azure,oneoff,DEMO migration setup,one project,one-off,22000,EUR,EU Frankfurt (demo),one-off,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-GC-C1,Google Cloud,compute,DEMO compute 512 GB,512 GB RAM,hour,4.80,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-GC-C2,Google Cloud,compute,DEMO compute 1024 GB,1024 GB RAM,hour,9.30,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-GC-S1,Google Cloud,storage,DEMO block storage,SSD,GB-month,0.11,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-GC-B1,Google Cloud,backup,DEMO backup storage,snapshot,GB-month,0.04,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-GC-N1,Google Cloud,network,DEMO outbound traffic,internet egress,GB,0.10,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-GC-M1,Google Cloud,managed,DEMO monitoring and support,basic,month,250,EUR,EU Frankfurt (demo),on-demand,none (list price),NA,demo,2026-10-28,DEMO - not a real price
+D-GC-O1,Google Cloud,oneoff,DEMO migration setup,one project,one-off,18000,EUR,EU Frankfurt (demo),one-off,none (list price),NA,demo,2026-10-28,DEMO - not a real price
