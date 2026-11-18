@@ -1,0 +1,10 @@
+provider,criterion_id,score,source,confidence,notes
+AWS,C2,9,DEMO - invented score,low,DEMO - not a real value
+AWS,C3,8,DEMO - invented score,low,DEMO - not a real value
+AWS,C4,5,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C2,7,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C3,7,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C4,8,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C2,6,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C3,9,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C4,4,DEMO - invented score,low,DEMO - not a real value

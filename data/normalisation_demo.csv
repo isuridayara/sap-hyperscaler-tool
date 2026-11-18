@@ -1,0 +1,5 @@
+criterion_id,criterion_name,direction,method,score_min,score_max,importance_cost_preset,importance_compliance_preset,notes
+C1,Cost (base case EUR over the evaluation period),lower_is_better,minmax_from_cost,1,9,9,3,DEMO - not a real value
+C2,Compliance and data residency,higher_is_better,matrix_score,1,9,3,9,DEMO - not a real value
+C3,SAP support and certification,higher_is_better,matrix_score,1,9,5,5,DEMO - not a real value
+C4,Fit with existing infrastructure,higher_is_better,matrix_score,1,9,3,3,DEMO - not a real value
