@@ -1,6 +1,6 @@
 // app.js - connects the page to the engines.
 // It loads the CSV files, reads the form, runs cost.js, mcda.js and sensitivity.js,
-// and fills the four tabs. It also switches tabs and shows the DEMO DATA banner.
+// and fills the four tabs. It also switches tabs and shows the DEMO DATA notices.
 
 var App = {};
 
@@ -374,20 +374,54 @@ App.showSensitivity = function () {
   });
 };
 
+// ---------- demo notices ----------
+
+// Which tabs each data file feeds. The prices feed every tab (cost is also a criterion),
+// the criteria files feed only the last three tabs.
+App.DEMO_TABS = {
+  prices: ["tab-cost", "tab-matrix", "tab-result", "tab-sensitivity"],
+  normalisation: ["tab-matrix", "tab-result", "tab-sensitivity"],
+  criteria: ["tab-matrix", "tab-result", "tab-sensitivity"]
+};
+
+// Red DEMO notices (decision by Eva, 2026-11-18):
+// - demo prices file: the red banner at the top of the page, as before;
+// - demo criteria files: a red notice at the top of each tab that uses them,
+//   and "(DEMO)" on its tab button. The Cost tab stays clean when the prices are real.
+App.showDemoNotices = function () {
+  var demoFiles = {};                                  // tab id -> list of demo files it uses
+  Object.keys(App.FILES).forEach(function (k) {
+    if (App.FILES[k].indexOf("_demo") < 0) return;
+    App.DEMO_TABS[k].forEach(function (tab) {
+      (demoFiles[tab] = demoFiles[tab] || []).push(App.FILES[k]);
+    });
+  });
+
+  if (App.FILES.prices.indexOf("_demo") >= 0) {
+    var banner = document.getElementById("demo-banner");
+    banner.textContent = "DEMO DATA - the prices are not real: " + App.FILES.prices;
+    banner.style.display = "block";
+  }
+
+  Object.keys(demoFiles).forEach(function (tab) {
+    var notice = document.createElement("div");
+    notice.className = "demo-banner";
+    notice.style.display = "block";
+    notice.style.margin = "0 0 16px";
+    notice.textContent = "DEMO DATA - this tab uses files that are not real yet: " + demoFiles[tab].join(", ");
+    var panel = document.getElementById(tab);
+    panel.insertBefore(notice, panel.firstChild);
+    var button = document.querySelector(".tab-buttons button[data-tab=\"" + tab + "\"]");
+    if (button) button.textContent += " (DEMO)";
+  });
+};
+
 // ---------- start ----------
 
 App.start = function () {
   App.setupTabs();
 
-  // Red banner when any demo file is used.
-  var demo = Object.keys(App.FILES).some(function (k) { return App.FILES[k].indexOf("_demo") >= 0; });
-  if (demo) {
-    var demoFiles = Object.keys(App.FILES).map(function (k) { return App.FILES[k]; })
-      .filter(function (f) { return f.indexOf("_demo") >= 0; });
-    var banner = document.getElementById("demo-banner");
-    banner.textContent = "DEMO DATA - these files are not real yet: " + demoFiles.join(", ");
-    banner.style.display = "block";
-  }
+  App.showDemoNotices();
 
   Promise.all([App.loadCsv(App.FILES.prices), App.loadCsv(App.FILES.normalisation), App.loadCsv(App.FILES.criteria)])
     .then(function (results) {
