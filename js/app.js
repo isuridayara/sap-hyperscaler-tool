@@ -221,6 +221,7 @@ App.showCost = function () {
     return row;
   });
   html += App.missingNote(L);
+  html += App.yearTable(L);
   html += "<p>Base case by cost part (EUR, all years together):</p>";
   html += App.table(["Provider", "Compute", "Storage", "Backup", "Network", "Managed", "OneOff"], partRows);
   document.getElementById("cost-table").innerHTML = html;
@@ -236,6 +237,28 @@ App.showCost = function () {
     },
     options: { plugins: { title: { display: true, text: "Cost over the evaluation period (EUR)" } } }
   });
+};
+
+// Table with one row per provider and year: low, base and high cost of that year (EUR),
+// plus one total row per provider. The note under it says what the high case means at list price.
+App.yearTable = function (L) {
+  var rows = [];
+  L.providers.forEach(function (p) {
+    var c = L.costs[p];
+    c.base.years.forEach(function (y, i) {
+      rows.push([p, "Year " + (i + 1), App.num(App.fmt(c.low.years[i].total)),
+                 App.num(App.fmt(y.total)), App.num(App.fmt(c.high.years[i].total))]);
+    });
+    rows.push([p, "Total " + L.profile.years + " years", App.num("<strong>" + App.fmt(c.low.total) + "</strong>"),
+               App.num("<strong>" + App.fmt(c.base.total) + "</strong>"), App.num("<strong>" + App.fmt(c.high.total) + "</strong>")]);
+  });
+  var html = "<p>Cost per provider and year (EUR):</p>" + App.table(["Provider", "Year", "Low", "Base", "High"], rows);
+  if (L.costs[L.providers[0]].high.discountPct === L.costs[L.providers[0]].base.discountPct) {
+    html += "<p class=\"note\">At list price the high case cannot add a price above the list price, so it differs from the base case " +
+      "only by faster data growth. The range therefore runs from a discounted price (low) up to the list price (base and high). " +
+      "Data growth changes only storage and backup; the machine size stays the same for all years.</p>";
+  }
+  return html;
 };
 
 // Names of the six cost parts as the page shows them.
