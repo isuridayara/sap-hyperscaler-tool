@@ -19,3 +19,17 @@ Decisions and rules for the S/4HANA hyperscaler decision-support prototype. Newe
 - Known limitations: SAP and OS licences not included; extra IOPS/throughput not included; free egress allowances not
   deducted; snapshots modelled as one full copy although they are incremental; first-tier support overstates support
   above 10,000 USD per month.
+
+## Real data and reference profile (Chat 4, 2026-11-18 to 2026-11-20)
+
+- Decision (Eva, 2026-11-18): the red DEMO notice is shown only on the tabs that still use demo files
+  (Criteria matrix, Weighted result, Sensitivity: data/normalisation_demo.csv, data/criteria_demo.csv). The top
+  banner appears only if a demo prices file is loaded. The Cost tab runs on data/prices.csv without a banner.
+- Decision (Eva, 2026-11-19): reference profile confirmed (notes/reference_profile.md): 600 GB HANA data, 900 GB
+  memory (1,024 GiB step), 10% growth per year, 500 GB egress per month, 5 years, EU Frankfurt, list price.
+  The form on the page opens with these values. All values are assumptions [CITATION NEEDED].
+- Decision (Eva, 2026-11-19): at list price the high case cannot go above the list price, so high differs from base
+  only by faster data growth. This is kept and explained on the page; no price-increase assumption is added.
+- Calculator check (2026-11-20, notes/calculator_check.md): AWS Pricing Calculator vs engine for the reference
+  profile, Year 1 base, one month: compute, storage and network identical; snapshots +16.20 USD in the calculator
+  (full first copy plus half-month change); total without support +0.23%.
