@@ -33,3 +33,18 @@ Decisions and rules for the S/4HANA hyperscaler decision-support prototype. Newe
 - Calculator check (2026-11-20, notes/calculator_check.md): AWS Pricing Calculator vs engine for the reference
   profile, Year 1 base, one month: compute, storage and network identical; snapshots +16.20 USD in the calculator
   (full first copy plus half-month change); total without support +0.23%.
+
+## Weights and ranking (Chat 5, 2026-11-20)
+
+- Decision (Eva, 2026-11-20): AHP in two levels: four groups (C1 Cost and capacity, C2 Availability and DR,
+  C3 Residency and compliance, C4 SAP tooling), then the sub-criteria inside each group.
+  Final weight = group weight x local weight. 9 judgments per preset instead of 21.
+- Decision (Eva, 2026-11-20): pairwise judgments for the cost-sensitive (CR 0.002) and compliance-sensitive
+  (CR 0.013) presets, with a reason for each, in data/pairwise.csv. Results in notes/mcda_results.md.
+- Decision (Eva, 2026-11-20): C1.1 is scored from the 5-year base-case total cost (min-max, cheapest = 9),
+  not from EUR per GB RAM-hour. Compute is about 98% of the bill before support (notes/calculator_check.md), and
+  the order is the same (Google Cloud, Microsoft Azure, AWS).
+- The demo criteria files now use the seven criteria C1.1 to C4.1; their scores (except C1.1) are invented,
+  so tabs 2-4 keep the red DEMO notice and the rankings are not findings yet.
+- TOPSIS is the cross-check. If its order differs from the AHP weighted sum, the page writes "FINDING".
+- tests.html added: 47 automatic checks of AHP, weighted sum, TOPSIS and both presets.
