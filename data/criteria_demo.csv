@@ -1,10 +1,19 @@
 provider,criterion_id,score,source,confidence,notes
-AWS,C2,9,DEMO - invented score,low,DEMO - not a real value
-AWS,C3,8,DEMO - invented score,low,DEMO - not a real value
-AWS,C4,5,DEMO - invented score,low,DEMO - not a real value
-Microsoft Azure,C2,7,DEMO - invented score,low,DEMO - not a real value
-Microsoft Azure,C3,7,DEMO - invented score,low,DEMO - not a real value
-Microsoft Azure,C4,8,DEMO - invented score,low,DEMO - not a real value
-Google Cloud,C2,6,DEMO - invented score,low,DEMO - not a real value
-Google Cloud,C3,9,DEMO - invented score,low,DEMO - not a real value
-Google Cloud,C4,4,DEMO - invented score,low,DEMO - not a real value
+AWS,C1.2,8,DEMO - invented score,low,DEMO - not a real value
+AWS,C2.1,9,DEMO - invented score,low,DEMO - not a real value
+AWS,C2.2,8,DEMO - invented score,low,DEMO - not a real value
+AWS,C3.1,6,DEMO - invented score,low,DEMO - not a real value
+AWS,C3.2,7,DEMO - invented score,low,DEMO - not a real value
+AWS,C4.1,7,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C1.2,9,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C2.1,8,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C2.2,7,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C3.1,8,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C3.2,8,DEMO - invented score,low,DEMO - not a real value
+Microsoft Azure,C4.1,8,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C1.2,6,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C2.1,8,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C2.2,7,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C3.1,5,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C3.2,6,DEMO - invented score,low,DEMO - not a real value
+Google Cloud,C4.1,6,DEMO - invented score,low,DEMO - not a real value

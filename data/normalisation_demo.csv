@@ -1,5 +1,8 @@
-criterion_id,criterion_name,direction,method,score_min,score_max,importance_cost_preset,importance_compliance_preset,notes
-C1,Cost (base case EUR over the evaluation period),lower_is_better,minmax_from_cost,1,9,9,3,DEMO - not a real value
-C2,Compliance and data residency,higher_is_better,matrix_score,1,9,3,9,DEMO - not a real value
-C3,SAP support and certification,higher_is_better,matrix_score,1,9,5,5,DEMO - not a real value
-C4,Fit with existing infrastructure,higher_is_better,matrix_score,1,9,3,3,DEMO - not a real value
+criterion_id,criterion_name,group_id,group_name,direction,method,score_min,score_max,notes
+C1.1,Price of HANA-certified compute (scored from the 5-year base-case total cost),C1,Cost and capacity,lower_is_better,minmax_from_cost,1,9,"Real: scored from data/prices.csv via the cost engine (cheapest = 9). Decision Eva 2026-11-20: total base-case cost instead of EUR per GB RAM-hour"
+C1.2,Certified scale-up range (largest certified single-node memory),C1,Cost and capacity,higher_is_better,matrix_score,1,9,DEMO - not a real value
+C2.1,Availability (published VM SLA for a multi-zone setup),C2,Availability and DR,higher_is_better,matrix_score,1,9,DEMO - not a real value
+C2.2,HANA backup and DR (checklist),C2,Availability and DR,higher_is_better,matrix_score,1,9,DEMO - not a real value
+C3.1,EU data residency (EU regions with HANA-certified instances),C3,Residency and compliance,higher_is_better,matrix_score,1,9,DEMO - not a real value
+C3.2,Compliance attestations (checklist),C3,Residency and compliance,higher_is_better,matrix_score,1,9,DEMO - not a real value
+C4.1,SAP deployment and operations tooling (checklist),C4,SAP tooling,higher_is_better,matrix_score,1,9,DEMO - not a real value
