@@ -1,16 +1,21 @@
 // app.js - connects the page to the engines.
 // It loads the CSV files, reads the form, runs cost.js, mcda.js and sensitivity.js,
-// and fills the four tabs. It also switches tabs and shows the DEMO DATA notices.
+// and fills the four tabs. Chat 5: AHP weights from data/pairwise.csv, both rankings in tab 3. It also switches tabs and shows the DEMO DATA notices.
 
 var App = {};
 
-// Which data files the page loads. To use real data later, change these three names
-// (for example "data/prices.csv"). A file name with "_demo" switches on the red banner.
+// Which data files the page loads. To use real data later, change these names
+// (for example "data/criteria.csv"). A file name with "_demo" switches on the red DEMO notice.
+// pairwise.csv holds Eva's AHP judgments for the two presets (real decisions, not demo).
 App.FILES = {
   prices: "data/prices.csv",
   normalisation: "data/normalisation_demo.csv",
-  criteria: "data/criteria_demo.csv"
+  criteria: "data/criteria_demo.csv",
+  pairwise: "data/pairwise.csv"
 };
+
+// Names of the presets as the page shows them.
+App.PRESET_LABEL = { cost: "Cost-sensitive", compliance: "Compliance-sensitive", user: "User-defined" };
 
 // One fixed colour per provider, so a provider looks the same in every chart.
 App.COLOURS = ["#4C72B0", "#DD8452", "#55A868", "#8172B3"];
@@ -26,7 +31,15 @@ App.fmt = function (x, digits) {
   if (x === null || x === undefined || isNaN(x)) return "NA";
   return x.toLocaleString("en-GB", { minimumFractionDigits: digits || 0, maximumFractionDigits: digits || 0 });
 };
-App.pct = function (x) { return x === null ? "NA" : App.fmt(x * 100, 1) + "%"; };
+App.pct = function (x) { return x === null || x === undefined ? "NA" : App.fmt(x * 100, 1) + "%"; };
+
+// Show a pairwise judgment the way it is written on the Saaty scale: 3, 1, 1/2, 1/5 ...
+App.frac = function (x) {
+  if (x === null || x === undefined) return "NA";
+  if (x >= 1) return App.fmt(x, Math.abs(x - Math.round(x)) < 1e-9 ? 0 : 2);
+  var inv = 1 / x;
+  return Math.abs(inv - Math.round(inv)) < 1e-9 ? "1/" + Math.round(inv) : App.fmt(x, 3);
+};
 
 // Build an HTML table from a header list and a list of rows (each row a list of cells).
 // A cell that is a number is right-aligned.
@@ -134,19 +147,36 @@ App.readProfile = function () {
   };
 };
 
-// Importance (1-9) per criterion for the chosen preset.
-App.importance = function (preset) {
+// Importance (1-9) per criterion, typed in by the user (only for the "User-defined" preset).
+App.importance = function () {
   return App.data.normalisation.map(function (c) {
-    if (preset === "cost") return Cost.toNumber(c.importance_cost_preset);
-    if (preset === "compliance") return Cost.toNumber(c.importance_compliance_preset);
     var v = parseFloat(document.getElementById("imp-" + c.criterion_id).value);
     return Math.min(9, Math.max(1, isNaN(v) ? 5 : v));
   });
 };
 
+// AHP weights for the chosen preset.
+// - cost / compliance: the two-level AHP from Eva's judgments in data/pairwise.csv.
+// - user: one importance value per criterion (simple, always consistent).
+// Returns { weights: { "C1.1": ... }, hierarchy (or null), flat (or null), consistent, error }.
+App.presetWeights = function (preset, ids) {
+  if (preset === "user") {
+    var flat = Mcda.ahpWeights(Mcda.pairwiseFromImportance(App.importance()));
+    var w = {};
+    ids.forEach(function (c, i) { w[c] = flat.weights[i]; });
+    return { weights: w, hierarchy: null, flat: flat, consistent: flat.consistent, error: null };
+  }
+  var judgments = App.data.pairwise
+    .filter(function (r) { return r.preset === preset; })
+    .map(function (r) { return { matrix: r.matrix, row: r.row, col: r.col, value: Mcda.parseJudgment(r.value) }; });
+  var h = Mcda.ahpHierarchy(ids, judgments);
+  return { weights: h.weights, hierarchy: h, flat: null, consistent: h.consistent, error: h.error };
+};
+
 // ---------- calculation ----------
 
 App.calculate = function () {
+  App.status("");                  // clear an old error message
   var profile = App.readProfile();
   var providers = App.unique(App.data.prices, "provider");
   var criteria = App.data.normalisation;
@@ -176,16 +206,23 @@ App.calculate = function () {
   });
 
   // 3. Weights from AHP.
-  var ahp = Mcda.ahpWeights(Mcda.pairwiseFromImportance(App.importance(profile.preset)));
-  var weights = {};
-  criteria.forEach(function (c, i) { weights[c.criterion_id] = ahp.weights[i]; });
+  var ids = criteria.map(function (c) { return c.criterion_id; });
+  var ahp = App.presetWeights(profile.preset, ids);
+  if (ahp.error) {
+    App.status("Error in " + App.FILES.pairwise + ": " + ahp.error + ". The ranking cannot be calculated.");
+    return;
+  }
+  var weights = ahp.weights;
 
-  // 4. Ranking and cross-check.
+  // 4. Ranking (weighted sum), gap contributions and the TOPSIS cross-check.
   var ranking = Mcda.weightedSum(scores, weights);
+  var gaps = Mcda.gapContributions(ranking);
   var topsis = Mcda.topsis(scores, weights);
+  var comparison = Mcda.compareRankings(ranking, topsis);
 
   App.last = { profile: profile, providers: providers, criteria: criteria, costs: costs,
-               scores: scores, cells: cells, ahp: ahp, weights: weights, ranking: ranking, topsis: topsis };
+               scores: scores, cells: cells, ahp: ahp, weights: weights, ranking: ranking,
+               gaps: gaps, topsis: topsis, comparison: comparison };
 
   App.showCost();
   App.showMatrix();
@@ -323,20 +360,21 @@ App.showMatrix = function () {
 App.showResult = function () {
   var L = App.last;
   var ids = L.criteria.map(function (c) { return c.criterion_id; });
+  var name = {};
+  L.criteria.forEach(function (c) { name[c.criterion_id] = c.criterion_name; });
 
-  var wRows = L.criteria.map(function (c) { return [c.criterion_id + " " + c.criterion_name, App.num(App.pct(L.weights[c.criterion_id]))]; });
-  document.getElementById("weights-info").innerHTML =
-    "<p>Weights from AHP (simple placeholder). Consistency ratio CR = " + App.fmt(L.ahp.cr, 3) +
-    (L.ahp.consistent ? " (below 0.1: acceptable)." : " (0.1 or more: NOT consistent, revise the judgements).") + "</p>" +
-    App.table(["Criterion", "Weight"], wRows);
+  // Part 1: the AHP weights, with the matrices and their consistency ratios.
+  document.getElementById("weights-info").innerHTML = App.weightsHtml(L, ids, name);
 
+  // Part 2: ranking 1, the weighted sum, with each criterion's contribution.
   var rows = L.ranking.map(function (r, i) {
     var row = [String(i + 1), r.provider, App.num(App.fmt(r.total, 2))];
     ids.forEach(function (c) { row.push(App.num(App.fmt(r.contributions[c], 2))); });
     return row;
   });
   document.getElementById("result-table").innerHTML =
-    "<p>Total = sum of weight x score (maximum 9). Each criterion column shows its contribution.</p>" +
+    "<h3>Ranking 1: AHP weighted sum</h3>" +
+    "<p>Total = sum of weight x score (scores 1-9, so the maximum is 9). Each criterion column shows its contribution to the total.</p>" +
     App.table(["Rank", "Provider", "Total"].concat(ids), rows);
 
   App.drawChart("result-chart", {
@@ -346,21 +384,115 @@ App.showResult = function () {
       datasets: L.criteria.map(function (c, i) {
         return { label: c.criterion_id + " " + c.criterion_name,
                  data: L.ranking.map(function (r) { return r.contributions[c.criterion_id]; }),
-                 backgroundColor: App.COLOURS[i % App.COLOURS.length] };
+                 backgroundColor: App.CRITERION_COLOURS[i % App.CRITERION_COLOURS.length] };
       })
     },
     options: { indexAxis: "y", scales: { x: { stacked: true, max: 9 }, y: { stacked: true } },
-               plugins: { title: { display: true, text: "Contribution of each criterion to the total" } } }
+               plugins: { title: { display: true, text: "Contribution of each criterion to the total (AHP weighted sum)" } } }
   });
 
-  var tRows = L.topsis.map(function (t, i) { return [String(i + 1), t.provider, App.num(App.fmt(t.closeness, 3))]; });
-  var agree = L.topsis[0].provider === L.ranking[0].provider;
+  // Part 3: what makes up the gap between the first provider and each of the others.
+  var gapRows = L.gaps.map(function (g) {
+    var row = [g.leader + " vs " + g.other, App.num("<strong>" + App.fmt(g.totalGap, 3) + "</strong>")];
+    ids.forEach(function (c) { row.push(App.num(App.fmt(g.gaps[c], 3))); });
+    return row;
+  });
+  document.getElementById("gap-table").innerHTML =
+    "<h3>Contribution of each criterion to the gap between providers</h3>" +
+    "<p>Gap = contribution of the first provider minus contribution of the other provider. " +
+    "Positive: this criterion helps the first provider. Negative: it helps the other provider. " +
+    "The criterion gaps add up to the total gap.</p>" +
+    App.table(["Comparison", "Total gap"].concat(ids), gapRows);
+
+  // Part 4: ranking 2, TOPSIS, and the comparison of the two rankings.
+  var topsisRank = {};
+  L.topsis.forEach(function (t, i) { topsisRank[t.provider] = i + 1; });
+  var tRows = L.topsis.map(function (t, i) {
+    return [String(i + 1), t.provider, App.num(App.fmt(t.closeness, 3)),
+            App.num(App.fmt(t.dIdeal, 4)), App.num(App.fmt(t.dAnti, 4))];
+  });
+  var cRows = L.ranking.map(function (r, i) {
+    var tr = topsisRank[r.provider];
+    return [r.provider, App.num(String(i + 1)), App.num(String(tr)), tr === i + 1 ? "same" : "DIFFERENT"];
+  });
+  var C = L.comparison;
+  var verdict = C.sameOrder
+    ? "AHP (weighted sum) and TOPSIS give the same order: " + C.ahpOrder.join(" > ") + "."
+    : "FINDING: AHP (weighted sum) and TOPSIS give a different order. AHP: " + C.ahpOrder.join(" > ") +
+      "; TOPSIS: " + C.topsisOrder.join(" > ") + ". The result depends on the method, so it is not robust. " +
+      "This is a finding, not an error.";
   document.getElementById("topsis-table").innerHTML =
-    "<h3>Cross-check with TOPSIS (simple placeholder)</h3>" +
-    "<p>Closeness to the ideal provider, from 0 to 1. " +
-    (agree ? "TOPSIS and the weighted sum agree on the first place."
-           : "TOPSIS and the weighted sum disagree on the first place. This is a finding, not an error.") + "</p>" +
-    App.table(["Rank", "Provider", "Closeness"], tRows);
+    "<h3>Ranking 2: TOPSIS (cross-check)</h3>" +
+    "<p>Same scores and weights. Closeness to the ideal provider from 0 (worst on every criterion) to 1 (best on every criterion). " +
+    "Distances are measured to the ideal and to the anti-ideal (worst) provider.</p>" +
+    App.table(["Rank", "Provider", "Closeness", "Distance to ideal", "Distance to anti-ideal"], tRows) +
+    "<h3>AHP and TOPSIS side by side</h3>" +
+    App.table(["Provider", "AHP rank", "TOPSIS rank", "Same place?"], cRows) +
+    "<p><strong>" + App.escape(verdict) + "</strong></p>";
+};
+
+// Colours for the seven criteria in the contribution chart (one per criterion).
+App.CRITERION_COLOURS = ["#4C72B0", "#9DB7D5", "#DD8452", "#F2C29B", "#55A868", "#A5D6A7", "#8172B3"];
+
+// HTML for the AHP part of tab 3: preset, group matrix, local matrices, final weights, CR.
+App.weightsHtml = function (L, ids, name) {
+  var A = L.ahp;
+  var label = App.PRESET_LABEL[L.profile.preset] || L.profile.preset;
+  function crText(ahp) {
+    return "CR = " + App.fmt(ahp.cr, 3) + (ahp.consistent ? " (below 0.1: consistent)" : " (0.1 or more: NOT consistent, revise the judgments)");
+  }
+  function matrixTable(mIds, matrix, ahp, names) {
+    var rows = mIds.map(function (id, i) {
+      var row = [id + (names && names[id] ? " " + names[id] : "")];
+      matrix[i].forEach(function (cell) { row.push(App.num(App.frac(cell))); });
+      row.push(App.num("<strong>" + App.fmt(ahp.weights[i], 3) + "</strong>"));
+      return row;
+    });
+    return App.table([""].concat(mIds).concat(["Weight"]), rows);
+  }
+
+  var html = "<h3>AHP weights: " + App.escape(label) + " preset</h3>";
+  if (A.flat) {
+    html += "<p>User-defined importance values (1-9) are turned into a pairwise matrix (importance i / importance j). " +
+      "Such a matrix is always consistent: " + crText(A.flat) + ".</p>";
+  } else {
+    var H = A.hierarchy;
+    var groupName = {};
+    L.criteria.forEach(function (c) { groupName[c.group_id] = c.group_name; });
+    html += "<p>Pairwise judgments on the Saaty scale (1 = equal ... 9 = extremely more important) from " +
+      App.escape(App.FILES.pairwise) + ". Read each row as: the row is X times as important as the column. " +
+      "Weights = principal eigenvector of the matrix.</p>";
+    html += "<p><strong>Level 1: the four groups.</strong> lambda max = " + App.fmt(H.groups.ahp.lambdaMax, 3) +
+      ", CI = " + App.fmt(H.groups.ahp.ci, 4) + ", RI = " + App.fmt(Mcda.RANDOM_INDEX[H.groups.ids.length], 2) +
+      ", " + crText(H.groups.ahp) + ".</p>";
+    html += matrixTable(H.groups.ids, H.groups.matrix, H.groups.ahp, groupName);
+    html += "<p><strong>Level 2: inside each group.</strong> A 2 x 2 matrix is always consistent (CR = 0); " +
+      "a group with one criterion needs no comparison.</p>";
+    H.groups.ids.forEach(function (g) {
+      var loc = H.local[g];
+      if (loc.ids.length < 2) return;
+      html += "<p>" + App.escape(g + " " + (groupName[g] || "")) + ": " + crText(loc.ahp) + "</p>";
+      html += matrixTable(loc.ids, loc.matrix, loc.ahp, null);
+    });
+  }
+
+  var wRows = L.criteria.map(function (c) {
+    var row = [c.criterion_id + " " + c.criterion_name];
+    if (A.hierarchy) {
+      var g = A.hierarchy.groups.ids.indexOf(c.group_id);
+      var loc = A.hierarchy.local[c.group_id];
+      row.push(App.num(App.fmt(A.hierarchy.groups.ahp.weights[g], 3)));
+      row.push(App.num(App.fmt(loc.ahp.weights[loc.ids.indexOf(c.criterion_id)], 3)));
+    }
+    row.push(App.num("<strong>" + App.fmt(L.weights[c.criterion_id], 3) + "</strong>"));
+    return row;
+  });
+  html += "<p><strong>Final weights</strong>" + (A.hierarchy ? " = group weight x local weight" : "") + ". They add up to 1.</p>";
+  html += App.table(A.hierarchy ? ["Criterion", "Group weight", "Local weight", "Final weight"] : ["Criterion", "Weight"], wRows);
+  html += A.consistent
+    ? "<p>All matrices are consistent (CR below 0.1).</p>"
+    : "<p class=\"status\"><strong>At least one matrix has CR of 0.1 or more. Revise the judgments in " + App.escape(App.FILES.pairwise) + ".</strong></p>";
+  return html;
 };
 
 // ---------- tab 4: Sensitivity ----------
@@ -404,7 +536,8 @@ App.showSensitivity = function () {
 App.DEMO_TABS = {
   prices: ["tab-cost", "tab-matrix", "tab-result", "tab-sensitivity"],
   normalisation: ["tab-matrix", "tab-result", "tab-sensitivity"],
-  criteria: ["tab-matrix", "tab-result", "tab-sensitivity"]
+  criteria: ["tab-matrix", "tab-result", "tab-sensitivity"],
+  pairwise: ["tab-result", "tab-sensitivity"]
 };
 
 // Red DEMO notices (decision by Eva, 2026-11-18):
@@ -446,11 +579,13 @@ App.start = function () {
 
   App.showDemoNotices();
 
-  Promise.all([App.loadCsv(App.FILES.prices), App.loadCsv(App.FILES.normalisation), App.loadCsv(App.FILES.criteria)])
+  Promise.all([App.loadCsv(App.FILES.prices), App.loadCsv(App.FILES.normalisation),
+               App.loadCsv(App.FILES.criteria), App.loadCsv(App.FILES.pairwise)])
     .then(function (results) {
       App.data.prices = results[0];
       App.data.normalisation = results[1];
       App.data.criteria = results[2];
+      App.data.pairwise = results[3];
       App.fillForm();
       document.getElementById("profile-form").addEventListener("submit", function (e) {
         e.preventDefault();        // stay on the page instead of reloading it
