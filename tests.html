@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tests - S/4HANA Hyperscaler Pathways</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 0 auto; padding: 0 16px 32px; color: #222; background: #fff; max-width: 1100px; }
+    h1 { font-size: 1.5rem; margin: 20px 0 4px; }
+    h2 { font-size: 1.2rem; margin-top: 24px; }
+    table { border-collapse: collapse; margin: 8px 0 16px; font-size: 0.9rem; width: 100%; }
+    th, td { border: 1px solid #bbb; padding: 4px 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f0f5; }
+    .pass { color: #fff; background: #2e7d32; font-weight: bold; text-align: center; }
+    .fail { color: #fff; background: #c00000; font-weight: bold; text-align: center; }
+    #summary { font-size: 1.2rem; font-weight: bold; padding: 10px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <h1>Automatic checks of the calculation code</h1>
+  <p>This page runs js/mcda.js with known inputs and compares the result with the expected value
+    (worked out by hand in Chat 5, or an obvious property such as "weights add up to 1").
+    Every row should say PASS. Open it on GitHub Pages: tests.html after the page address.</p>
+  <div id="summary">Running...</div>
+  <div id="results"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="js/mcda.js"></script>
+  <script>
+    // ---------- a very small test helper ----------
+    // Each test gives: a group, a name, the actual value, the expected value and a tolerance.
+    // Numbers pass if they differ by at most the tolerance; other values must be exactly equal.
+    var results = [];
+    function check(group, name, actual, expected, tolerance) {
+      var ok;
+      if (typeof expected === "number" && typeof actual === "number") {
+        ok = Math.abs(actual - expected) <= (tolerance || 1e-9);
+      } else {
+        ok = JSON.stringify(actual) === JSON.stringify(expected);
+      }
+      results.push({ group: group, name: name, actual: actual, expected: expected, ok: ok });
+    }
+    function round(x, d) { return typeof x === "number" ? Number(x.toFixed(d)) : x; }
+    function sum(list) { return list.reduce(function (a, b) { return a + b; }, 0); }
+    function values(obj) { return Object.keys(obj).map(function (k) { return obj[k]; }); }
+
+    // ---------- AHP ----------
+    var G = "AHP";
+    // The 3x3 example from Chat 5 (Cost, Compliance, Tooling).
+    var hand = Mcda.ahpWeights([[1, 3, 5], [1 / 3, 1, 2], [1 / 5, 1 / 2, 1]]);
+    check(G, "Hand example: weight Cost = 0.648", round(hand.weights[0], 3), 0.648);
+    check(G, "Hand example: weight Compliance = 0.230", round(hand.weights[1], 3), 0.230);
+    check(G, "Hand example: weight Tooling = 0.122", round(hand.weights[2], 3), 0.122);
+    check(G, "Hand example: lambda max = 3.004", round(hand.lambdaMax, 3), 3.004);
+    check(G, "Hand example: CR = 0.003 (consistent)", round(hand.cr, 3), 0.003);
+    check(G, "Hand example: weights add up to 1", sum(hand.weights), 1, 1e-9);
+
+    // The contradictory example from Chat 5: Cost vs Tooling = 1/5 instead of 5.
+    var bad = Mcda.ahpWeights([[1, 3, 1 / 5], [1 / 3, 1, 2], [5, 1 / 2, 1]]);
+    check(G, "Contradictory example: CR = 1.23", round(bad.cr, 2), 1.23);
+    check(G, "Contradictory example is flagged as NOT consistent", bad.consistent, false);
+
+    // A perfectly consistent matrix (built from importance 4 : 2 : 1) must give CR = 0 and weights 4/7, 2/7, 1/7.
+    var perfect = Mcda.ahpWeights(Mcda.pairwiseFromImportance([4, 2, 1]));
+    check(G, "Perfect matrix: CR = 0", perfect.cr, 0, 1e-9);
+    check(G, "Perfect matrix: weights 4/7, 2/7, 1/7", perfect.weights.map(function (w) { return round(w, 6); }),
+          [round(4 / 7, 6), round(2 / 7, 6), round(1 / 7, 6)]);
+
+    // A 2x2 matrix is always consistent.
+    var two = Mcda.ahpWeights([[1, 5], [1 / 5, 1]]);
+    check(G, "2x2 matrix (5): weights 0.833 / 0.167", [round(two.weights[0], 3), round(two.weights[1], 3)], [0.833, 0.167]);
+    check(G, "2x2 matrix: CR = 0", two.cr, 0);
+
+    // Reading judgments and building the matrix.
+    check(G, "parseJudgment(\"1/2\") = 0.5", Mcda.parseJudgment("1/2"), 0.5);
+    check(G, "parseJudgment(\"3\") = 3", Mcda.parseJudgment("3"), 3);
+    check(G, "parseJudgment(\"10\") = null (outside the 1-9 scale)", Mcda.parseJudgment("10"), null);
+    check(G, "parseJudgment(\"NA\") = null", Mcda.parseJudgment("NA"), null);
+    var m = Mcda.buildMatrix(["A", "B"], [{ row: "A", col: "B", value: 4 }]);
+    check(G, "buildMatrix fills the diagonal and the reciprocal", m, [[1, 4], [0.25, 1]]);
+    check(G, "buildMatrix with a missing judgment returns null",
+          Mcda.buildMatrix(["A", "B", "C"], [{ row: "A", col: "B", value: 2 }]), null);
+
+    // Two-level AHP with a small made-up hierarchy: groups X (X.1, X.2) and Y (Y.1).
+    var h = Mcda.ahpHierarchy(["X.1", "X.2", "Y.1"], [
+      { matrix: "groups", row: "X", col: "Y", value: 3 },
+      { matrix: "X", row: "X.1", col: "X.2", value: 1 }]);
+    check(G, "Hierarchy: final weight = group x local (X.1 = 0.75 x 0.5)", round(h.weights["X.1"], 6), 0.375);
+    check(G, "Hierarchy: a group with one criterion keeps the group weight (Y.1 = 0.25)", round(h.weights["Y.1"], 6), 0.25);
+    check(G, "Hierarchy: missing judgment gives an error, not a guess",
+          Mcda.ahpHierarchy(["X.1", "X.2", "Y.1"], [{ matrix: "groups", row: "X", col: "Y", value: 3 }]).weights, null);
+
+    // ---------- weighted sum and gap contributions ----------
+    G = "Weighted sum";
+    var w3 = { c: hand.weights[0], m: hand.weights[1], t: hand.weights[2] };
+    var s3 = { P: { c: 7, m: 5, t: 6 }, Q: { c: 5, m: 8, t: 4 }, R: { c: 9, m: 3, t: 7 } };
+    var ws = Mcda.weightedSum(s3, w3);
+    check(G, "Hand example: order R > P > Q", ws.map(function (r) { return r.provider; }), ["R", "P", "Q"]);
+    check(G, "Hand example: totals 7.378 / 6.419 / 5.567", ws.map(function (r) { return round(r.total, 3); }), [7.378, 6.419, 5.567]);
+    var gaps = Mcda.gapContributions(ws);
+    check(G, "Gap R vs P = 0.959", round(gaps[0].totalGap, 3), 0.959);
+    check(G, "Gap R vs P from Cost = +1.297", round(gaps[0].gaps.c, 3), 1.297);
+    check(G, "Criterion gaps add up to the total gap", sum(values(gaps[0].gaps)), gaps[0].totalGap, 1e-9);
+    var na = Mcda.weightedSum({ A: { c: 5 }, B: { c: null } }, { c: 1 });
+    check(G, "A provider with an NA score gets total NA and is ranked last", [na[1].provider, na[1].total], ["B", null]);
+    var cs = Mcda.costScores({ A: 100, B: 150, C: 200 });
+    check(G, "Cost scores: cheapest = 9, middle = 5, most expensive = 1", [cs.A, cs.B, cs.C], [9, 5, 1]);
+
+    // ---------- TOPSIS ----------
+    G = "TOPSIS";
+    var tp = Mcda.topsis(s3, w3);
+    check(G, "Hand example: order R > P > Q", tp.map(function (t) { return t.provider; }), ["R", "P", "Q"]);
+    check(G, "Hand example: closeness 0.646 / 0.481 / 0.354", tp.map(function (t) { return round(t.closeness, 3); }), [0.646, 0.481, 0.354]);
+    check(G, "Hand example: P distance to ideal 0.126, to anti-ideal 0.117",
+          [round(tp[1].dIdeal, 3), round(tp[1].dAnti, 3)], [0.126, 0.117]);
+    var dom = Mcda.topsis({ Best: { a: 9, b: 9 }, Mid: { a: 5, b: 5 }, Worst: { a: 1, b: 1 } }, { a: 0.5, b: 0.5 });
+    check(G, "Provider best on every criterion has closeness 1", dom[0].closeness, 1, 1e-9);
+    check(G, "Provider worst on every criterion has closeness 0", dom[2].closeness, 0, 1e-9);
+    var low = Mcda.topsis({ A: { cost: 100 }, B: { cost: 200 } }, { cost: 1 }, { cost: "lower_is_better" });
+    check(G, "lower_is_better: the cheaper provider wins", low[0].provider, "A");
+    var tna = Mcda.topsis({ A: { a: 5 }, B: { a: null }, C: { a: 7 } }, { a: 1 });
+    check(G, "A provider with an NA score gets closeness NA and is ranked last", [tna[2].provider, tna[2].closeness], ["B", null]);
+
+    // ---------- comparing the two rankings ----------
+    G = "AHP vs TOPSIS";
+    check(G, "Hand example: both methods give the same order", Mcda.compareRankings(ws, tp).sameOrder, true);
+    var diff = Mcda.compareRankings([{ provider: "A" }, { provider: "B" }], [{ provider: "B" }, { provider: "A" }]);
+    check(G, "A different order is detected (places 1 and 2)", [diff.sameOrder, diff.differentPlaces], [false, [1, 2]]);
+
+    // ---------- Eva's two presets from data/pairwise.csv ----------
+    // Expected weights were also calculated outside the page (Python, numpy eigenvector) in Chat 5.
+    var IDS = ["C1.1", "C1.2", "C2.1", "C2.2", "C3.1", "C3.2", "C4.1"];
+    var EXPECTED = {
+      cost:       { cr: 0.002, weights: [0.477, 0.095, 0.105, 0.105, 0.055, 0.055, 0.109] },
+      compliance: { cr: 0.013, weights: [0.081, 0.027, 0.077, 0.153, 0.188, 0.377, 0.098] }
+    };
+
+    function presetChecks(rows) {
+      ["cost", "compliance"].forEach(function (preset) {
+        var G2 = "Preset: " + preset;
+        var judg = rows.filter(function (r) { return r.preset === preset; })
+          .map(function (r) { return { matrix: r.matrix, row: r.row, col: r.col, value: Mcda.parseJudgment(r.value) }; });
+        check(G2, "9 judgments in data/pairwise.csv, all on the Saaty scale",
+              [judg.length, judg.every(function (j) { return j.value !== null; })], [9, true]);
+        var res = Mcda.ahpHierarchy(IDS, judg);
+        if (!res.weights) { check(G2, "AHP runs without error", res.error, null); return; }
+        check(G2, "Group matrix CR = " + EXPECTED[preset].cr, round(res.groups.ahp.cr, 3), EXPECTED[preset].cr);
+        check(G2, "Every matrix has CR < 0.1", res.consistent, true);
+        check(G2, "Final weights " + EXPECTED[preset].weights.join(" / "),
+              IDS.map(function (c) { return round(res.weights[c], 3); }), EXPECTED[preset].weights);
+        check(G2, "Final weights add up to 1", sum(values(res.weights)), 1, 1e-9);
+      });
+    }
+
+    // ---------- show the results ----------
+    function show() {
+      var passed = results.filter(function (r) { return r.ok; }).length;
+      var box = document.getElementById("summary");
+      box.textContent = passed === results.length
+        ? "ALL PASS: " + passed + " of " + results.length + " checks"
+        : "FAIL: " + (results.length - passed) + " of " + results.length + " checks failed";
+      box.className = passed === results.length ? "pass" : "fail";
+
+      var html = "", group = null;
+      results.forEach(function (r) {
+        if (r.group !== group) {
+          if (group !== null) html += "</tbody></table>";
+          group = r.group;
+          html += "<h2>" + group + "</h2><table><thead><tr><th>Result</th><th>Check</th><th>Expected</th><th>Actual</th></tr></thead><tbody>";
+        }
+        html += "<tr><td class=\"" + (r.ok ? "pass" : "fail") + "\">" + (r.ok ? "PASS" : "FAIL") + "</td><td>" + r.name +
+          "</td><td>" + JSON.stringify(r.expected) + "</td><td>" + JSON.stringify(r.actual) + "</td></tr>";
+      });
+      document.getElementById("results").innerHTML = html + "</tbody></table>";
+    }
+
+    // The preset checks need data/pairwise.csv, which can only be loaded from a web server (GitHub Pages).
+    fetch("data/pairwise.csv")
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (text) { presetChecks(Papa.parse(text, { header: true, skipEmptyLines: true }).data); })
+      .catch(function (err) { check("Preset files", "data/pairwise.csv can be loaded", String(err), "loaded"); })
+      .then(show);
+  </script>
+</body>
+</html>
