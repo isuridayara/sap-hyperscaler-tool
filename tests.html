@@ -18,14 +18,15 @@
 </head>
 <body>
   <h1>Automatic checks of the calculation code</h1>
-  <p>This page runs js/mcda.js with known inputs and compares the result with the expected value
-    (worked out by hand in Chat 5, or an obvious property such as "weights add up to 1").
+  <p>This page runs js/mcda.js and js/sensitivity.js with known inputs and compares the result with the expected value
+    (worked out by hand in Chat 5 and Chat 6, or an obvious property such as "weights add up to 1").
     Every row should say PASS. Open it on GitHub Pages: tests.html after the page address.</p>
   <div id="summary">Running...</div>
   <div id="results"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="js/mcda.js"></script>
+  <script src="js/sensitivity.js"></script>
   <script>
     // ---------- a very small test helper ----------
     // Each test gives: a group, a name, the actual value, the expected value and a tolerance.
@@ -126,6 +127,37 @@
     check(G, "Hand example: both methods give the same order", Mcda.compareRankings(ws, tp).sameOrder, true);
     var diff = Mcda.compareRankings([{ provider: "A" }, { provider: "B" }], [{ provider: "B" }, { provider: "A" }]);
     check(G, "A different order is detected (places 1 and 2)", [diff.sameOrder, diff.differentPlaces], [false, [1, 2]]);
+
+    // ---------- sensitivity and switch-points (Chat 6) ----------
+    G = "Sensitivity";
+    // Re-weighting: the new weight is set, the others keep their proportions and everything adds up to 1.
+    var rw = Sens.reweight({ a: 0.5, b: 0.3, c: 0.2 }, "a", 0.8);
+    check(G, "reweight: a = 0.8, b and c keep their 3 : 2 ratio (0.12 / 0.08)", [round(rw.a, 6), round(rw.b, 6), round(rw.c, 6)], [0.8, 0.12, 0.08]);
+    check(G, "reweight: weights still add up to 1", sum(values(rw)), 1, 1e-9);
+
+    // Hand example: A scores 9 on x and 1 on y, B scores 3 on x and 5 on y.
+    // With weight w on x: A = 9w + 1(1 - w) = 1 + 8w, B = 3w + 5(1 - w) = 5 - 2w. Equal when 10w = 4, so w = 0.4.
+    var s2 = { A: { x: 9, y: 1 }, B: { x: 3, y: 5 } };
+    var w2 = { x: 0.5, y: 0.5 };
+    var sp = Sens.switchPoints(s2, w2, "x", Sens.sweep(s2, w2, "x", 20));
+    check(G, "Hand example: one switch-point for the weight of x", sp.length, 1);
+    check(G, "Hand example: switch-point at weight 0.4", sp[0].weight, 0.4, 1e-6);
+    check(G, "Hand example: below 0.4 B wins, above 0.4 A wins", [sp[0].from, sp[0].to], ["B", "A"]);
+    var all = Sens.allWeightSwitchPoints(s2, w2, 100);
+    check(G, "All weights: x must move by -0.1 (0.5 to 0.4), y by +0.1 (0.5 to 0.6)",
+          [round(all[0].margin, 6), round(all[1].margin, 6)], [-0.1, 0.1]);
+    var domS = { A: { x: 9, y: 9 }, B: { x: 3, y: 5 } };
+    check(G, "A provider that is best on every criterion: no switch-point",
+          Sens.switchPoints(domS, w2, "x", Sens.sweep(domS, w2, "x", 20)).length, 0);
+
+    // Cost driver: A has a fixed total of 10.5, B's total equals the driver value v. B wins once v > 10.5.
+    var evalD = function (v) { return Mcda.weightedSum({ A: { c: 10.5 }, B: { c: v } }, { c: 1 }); };
+    var ptsD = Sens.driverSweep(Sens.range(0, 20, 5), evalD);
+    var cont = Sens.driverSwitchPoints(ptsD, evalD, true);
+    check(G, "Continuous driver: switch-point at 10.5 (A to B)", [round(cont[0].value, 6), cont[0].from, cont[0].to], [10.5, "A", "B"]);
+    var disc = Sens.driverSwitchPoints(ptsD, evalD, false);
+    check(G, "Stepwise driver: switch-point reported as between 10 and 15", disc[0].between, [10, 15]);
+    check(G, "range(0, 60, 5) gives 13 values from 0 to 60", [Sens.range(0, 60, 5).length, Sens.range(0, 60, 5)[12]], [13, 60]);
 
     // ---------- Eva's two presets from data/pairwise.csv ----------
     // Expected weights were also calculated outside the page (Python, numpy eigenvector) in Chat 5.
