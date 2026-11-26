@@ -9,7 +9,7 @@ Date: 2026-11-20. Code: js/mcda.js, js/app.js. Judgments: data/pairwise.csv. Che
 ## 1. Method
 
 - **AHP** (Analytic Hierarchy Process) with Saaty's 1-9 scale [CITATION NEEDED: Saaty 1980 / 2008].
-  Two levels (decision by Eva, 2026-11-20): four groups C1 to C4, then the sub-criteria inside each group.
+  Two levels (decision by Dayara, 2026-11-20): four groups C1 to C4, then the sub-criteria inside each group.
   Weights = principal eigenvector of each pairwise matrix (power iteration).
   Final weight of a criterion = group weight x local weight.
 - **Consistency:** CI = (lambda max - n) / (n - 1), CR = CI / RI, with RI = 0.90 for n = 4 (Saaty's random index)
@@ -20,7 +20,7 @@ Date: 2026-11-20. Code: js/mcda.js, js/app.js. Judgments: data/pairwise.csv. Che
 - **Ranking 2, TOPSIS** (cross-check) [CITATION NEEDED: Hwang and Yoon 1981]: vector normalisation, weighting,
   distance to the ideal and the anti-ideal provider, closeness = distance to anti-ideal / (sum of both distances).
   A different order from Ranking 1 is reported as a finding.
-- **C1.1 score** (decision by Eva, 2026-11-20): min-max from the 5-year base-case total cost of the cost engine
+- **C1.1 score** (decision by Dayara, 2026-11-20): min-max from the 5-year base-case total cost of the cost engine
   (cheapest = 9, most expensive = 1), not EUR per GB RAM-hour as first planned in Chat 2.
   Reason: compute is about 98% of the bill before support (AWS calculator check, notes/calculator_check.md), so both give the same order, and the Cost tab and the ranking then agree.
 - The two presets describe hypothetical buyer types, not a real company.
@@ -105,7 +105,7 @@ Table 6. Final weights = group weight x local weight (source: tab 3 of the page,
 Inputs: reference profile (notes/reference_profile.md): 1,200 GB memory (2 x data, changed 2026-11-26), 600 GB data, 10% growth, 500 GB/month egress,
 5 years, EU Frankfurt, list price. C1.1 scores from the 5-year base-case totals
 (Google Cloud 634,505 EUR = 9.0; Microsoft Azure 721,139 EUR = 4.97; AWS 806,535 EUR = 1.0).
-C1.2 to C4.1: data/criteria.csv, scored with the rules in data/normalisation.csv (decision Eva, 2026-11-26).
+C1.2 to C4.1: data/criteria.csv, scored with the rules in data/normalisation.csv (decision Dayara, 2026-11-26).
 Run on 2026-11-26 (local copy of the Chat 2 page; tests.html 80 of 80 PASS).
 
 Table 7. Criteria scores (source: data/criteria.csv, data/prices.csv)

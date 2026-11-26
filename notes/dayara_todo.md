@@ -1,7 +1,7 @@
-# Eva's to-do list (open items that only Eva can do)
+# Dayara's to-do list (open items that only Dayara can do)
 
-Status: Chat 2, step 9 (2026-11-26). Claude cannot do these items, because they need Eva's own reading, Eva's
-contacts or Eva's login. Each item says where to work, what to do, and what "done" looks like.
+Status: Chat 2, step 9 (2026-11-26). Claude cannot do these items, because they need Dayara's own reading, Dayara's
+contacts or Dayara's login. Each item says where to work, what to do, and what "done" looks like.
 
 ## 1. Tick the case sources (notes/validation_cases.md): DONE 2026-11-26
 
@@ -14,7 +14,7 @@ the main driver and says capex/hardware "were not the most important factors".
 Before the sessions:
 1. Upload all Chat 2 files to GitHub first, so the practitioners see the real data (no DEMO labels on the criteria tabs).
 2. Find 2-3 people: SAP Basis or cloud architects, SAP consultants or IT managers. One per hyperscaler is ideal.
-   [TODO: Eva to check with the supervisor whether written consent is needed and which form RNU uses.]
+   [TODO: Dayara to check with the supervisor whether written consent is needed and which form RNU uses.]
 3. Make one copy of notes/practitioner_form.md per person: practitioner_P1.md, practitioner_P2.md, ...
 
 During each session:

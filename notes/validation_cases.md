@@ -2,7 +2,7 @@
 
 Status: 2026-11-26, sources checked line by line on 2026-11-26. Claude found and read these pages; everything below is what the pages say (short quotes) or
 "not stated". **Check done 2026-11-26:** Claude re-opened every source page and compared each line with the page text.
-All lines hold; small corrections are marked "corrected 2026-11-26". Eva may spot-check any line. Nothing here is invented; where a source is silent the value is NA.
+All lines hold; small corrections are marked "corrected 2026-11-26". Dayara may spot-check any line. Nothing here is invented; where a source is silent the value is NA.
 
 Scope check for our tool: all three are customer-managed SAP on a hyperscaler (Route B). None of the sources
 mentions RISE with SAP / SAP Cloud ERP Private.
@@ -60,7 +60,7 @@ no reason for choosing Azure stated; operating costs about 20% lower.
 ## What this means for running the page
 
 None of the sources states the HANA memory size, data volume or traffic. So the company profile for each case
-can only partly come from the source. Approach (agreed by Eva on 2026-11-26):
+can only partly come from the source. Approach (agreed by Dayara on 2026-11-26):
 - Run each case with the **reference profile** (600 GB data, 1,200 GB memory (2 x data, since 2026-11-26), Frankfurt, list price) and change only
   what the source gives. For Arvato: memory 6,144 GB ("up to 6 TB"), which is above the largest machine in
   data/prices.csv (4 TiB), so the page will show compute as NA. That is itself a result: the tool's price data does not cover

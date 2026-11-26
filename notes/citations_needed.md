@@ -1,11 +1,11 @@
 # Open [CITATION NEEDED] items
 
 Status: Chat 2, step 7 (2026-11-26). This file lists every [CITATION NEEDED] item in the notes, together with a
-suggested source. **Eva checks each suggested source** (in the library, Google Scholar or on the web page itself)
+suggested source. **Dayara checks each suggested source** (in the library, Google Scholar or on the web page itself)
 before it goes into the thesis. Claude only read the web pages marked "read 2026-11-26". The literature entries are
-well-known standard works, and Claude has not opened them. [TODO: Eva to verify each reference and tick the box.]
+well-known standard works, and Claude has not opened them. [TODO: Dayara to verify each reference and tick the box.]
 
-Legend: **A** = source found and read, needs a tick. **B** = standard literature, Eva to verify. **C** = no source
+Legend: **A** = source found and read, needs a tick. **B** = standard literature, Dayara to verify. **C** = no source
 found; keep the value as a labelled assumption, or change it.
 
 ## 1. Method (notes/mcda_results.md, notes/validation.md)
@@ -31,16 +31,16 @@ found; keep the value as a labelled assumption, or change it.
 
 | # | Where | Claim | Suggested source | Type | OK |
 |---|---|---|---|---|---|
-| S1 | scope_assumption.md | Current name "SAP Cloud ERP Private", earlier "RISE with SAP" | SAP product page https://www.sap.com/products/erp/s4hana-private-edition.html (it now carries the title "SAP Cloud ERP Private"). SAP News, 22 April 2025, "Introducing SAP Cloud ERP Private Package to Accelerate Transformation" (read 2026-11-26). **Careful:** the article calls it a *new commercial package* that includes S/4HANA Cloud Private Edition. It does **not** say that it is a rename of RISE with SAP. [TODO: Eva, rewrite the sentence as "SAP Cloud ERP Private, the package that succeeds RISE with SAP" only if an SAP source says so; otherwise write "SAP's managed offering (RISE with SAP, now also sold as the SAP Cloud ERP Private package)".] | A | [ ] |
-| S2 | scope_assumption.md | The bundle combines software, infrastructure, technical operations and support in one contract | Same SAP News article (lists applications, transformation tools and services, and cloud services in the package). Infrastructure and operations: SAP page "What is SAP ERP Private operations and support" (sap.com, products/erp/cloud-erp-private/what-is-sap-erp-private-operations-and-support.html). [TODO: Eva to open and check.] | A/B | [ ] |
-| S3 | scope_assumption.md | Pricing is negotiated per customer, no public price list | SAP pricing page https://www.sap.com/products/erp/s4hana-private-edition/pricing.html [TODO: Eva to check that it shows "contact us" and no list price, and note the access date]. | B | [ ] |
+| S1 | scope_assumption.md | Current name "SAP Cloud ERP Private", earlier "RISE with SAP" | SAP product page https://www.sap.com/products/erp/s4hana-private-edition.html (it now carries the title "SAP Cloud ERP Private"). SAP News, 22 April 2025, "Introducing SAP Cloud ERP Private Package to Accelerate Transformation" (read 2026-11-26). **Careful:** the article calls it a *new commercial package* that includes S/4HANA Cloud Private Edition. It does **not** say that it is a rename of RISE with SAP. [TODO: Dayara, rewrite the sentence as "SAP Cloud ERP Private, the package that succeeds RISE with SAP" only if an SAP source says so; otherwise write "SAP's managed offering (RISE with SAP, now also sold as the SAP Cloud ERP Private package)".] | A | [ ] |
+| S2 | scope_assumption.md | The bundle combines software, infrastructure, technical operations and support in one contract | Same SAP News article (lists applications, transformation tools and services, and cloud services in the package). Infrastructure and operations: SAP page "What is SAP ERP Private operations and support" (sap.com, products/erp/cloud-erp-private/what-is-sap-erp-private-operations-and-support.html). [TODO: Dayara to open and check.] | A/B | [ ] |
+| S3 | scope_assumption.md | Pricing is negotiated per customer, no public price list | SAP pricing page https://www.sap.com/products/erp/s4hana-private-edition/pricing.html [TODO: Dayara to check that it shows "contact us" and no list price, and note the access date]. | B | [ ] |
 
 ## 4. Reference profile (notes/reference_profile.md, notes/decisions.md)
 
 | # | Value | Finding | Type | OK |
 |---|---|---|---|---|
 | P1 | 600 GB HANA data | No published source found. Keep it as a labelled assumption ("mid-sized system"). The practitioner sessions can confirm whether it is realistic. | C | [ ] |
-| P2 | Memory = 2 x data (1,200 GB → 2,048 GiB), changed from 1.5x by Eva on 2026-11-26 | **No source supports 1.5x.** SAP Learning "Performing SAP HANA Sizing" (read 2026-11-26) says to "calculate the total RAM by multiplying the static RAM by two", so memory = **2 x** data in memory. It also says memory should be sized with the SAP Quick Sizer or the sizing reports. The AWS "SAP HANA Sizing" page gives no factor and refers to SAP Note 1793345. Eva chose the 2x rule on 2026-11-26; the profile and all results are updated. | A | [ ] |
+| P2 | Memory = 2 x data (1,200 GB → 2,048 GiB), changed from 1.5x by Dayara on 2026-11-26 | **No source supports 1.5x.** SAP Learning "Performing SAP HANA Sizing" (read 2026-11-26) says to "calculate the total RAM by multiplying the static RAM by two", so memory = **2 x** data in memory. It also says memory should be sized with the SAP Quick Sizer or the sizing reports. The AWS "SAP HANA Sizing" page gives no factor and refers to SAP Note 1793345. Dayara chose the 2x rule on 2026-11-26; the profile and all results are updated. | A | [ ] |
 | P3 | 10% data growth per year | No source found. Keep it as an assumption; the low/base/high cases already vary it. | C | [ ] |
 | P4 | 500 GB/month outbound traffic | No source found. Keep it as an assumption; the sweep (0-20,000 GB/month, no switch-point) shows the result is not sensitive to it. | C | [ ] |
 | P5 | 5-year evaluation period | No source found. Keep it as an assumption; ask in the practitioner sessions. | C | [ ] |
@@ -49,11 +49,11 @@ found; keep the value as a labelled assumption, or change it.
 
 | # | Claim | Finding | Type | OK |
 |---|---|---|---|---|
-| V1 | A 21.9% AWS-only discount is a size that migration funding could reach | AWS does not publish MAP funding amounts. No public source found. [TODO: Eva, rewrite as "whether such a discount is realistic could not be checked from public sources" unless a practitioner can confirm it.] | C | [ ] |
+| V1 | A 21.9% AWS-only discount is a size that migration funding could reach | AWS does not publish MAP funding amounts. No public source found. [TODO: Dayara, rewrite as "whether such a discount is realistic could not be checked from public sources" unless a practitioner can confirm it.] | C | [ ] |
 
 ## Summary
 
-- 6 literature references (M1-M6): Eva verifies them in the library.
+- 6 literature references (M1-M6): Dayara verifies them in the library.
 - 4 web sources were read and only need a tick (K1-K3, S1). S1 needs a small rewrite.
 - 1 important finding: the 1.5x memory rule had no source; SAP's own course material uses 2x, so the profile now uses 2x.
 - 5 items have no public source (P1, P3, P4, P5, V1): keep them as labelled assumptions.

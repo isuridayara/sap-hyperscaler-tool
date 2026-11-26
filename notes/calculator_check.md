@@ -52,9 +52,9 @@ are therefore correct for AWS. This checks the prices, not the way a calculator 
 
 ## 4. Part B: AWS Pricing Calculator (done 2026-11-20)
 
-Entered by Eva on 2026-11-20 at https://calculator.aws/ (estimate "Reference profile Chat 4", Europe (Frankfurt)).
+Entered by Dayara on 2026-11-20 at https://calculator.aws/ (estimate "Reference profile Chat 4", Europe (Frankfurt)).
 Saved estimate: https://calculator.aws/#/estimate?id=6b3e3ab2ed8757ada464a11ce4cd04fe930217b6
-Values below are read from the calculator's own "Show calculations" boxes (screenshots kept by Eva).
+Values below are read from the calculator's own "Show calculations" boxes (screenshots kept by Dayara).
 [TODO: export the estimate as PDF and keep it with the evidence files.]
 
 Entries: Shared tenancy, Linux, constant usage, 1 x x2idn.16xlarge, On-Demand, 100% usage; EBS gp3 600 GB,
@@ -76,7 +76,7 @@ Entry errors that were found and removed from the comparison (they are not diffe
 - 500 GB per month of intra-region traffic (10.00 USD) typed into the wrong field. The reference profile has no
   intra-region traffic.
 With both, the calculator summary showed 6,978.77 USD per month (83,745.24 USD for 12 months) = 6,966.73 + 2.04 + 10.00.
-[TODO: Eva to delete the extra row and the intra-region amount in the saved estimate, then re-save the link.]
+[TODO: Dayara to delete the extra row and the intra-region amount in the saved estimate, then re-save the link.]
 
 ## 5. Reasons for the differences
 

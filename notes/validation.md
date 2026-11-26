@@ -18,7 +18,7 @@ differed). In Chat 6 the same check was repeated for a second provider, Microsof
 ### 1.1 Workload entered (reference profile, Year 1, base case, one month)
 
 Entered by Claude in the public Azure Pricing Calculator (https://azure.microsoft.com/en-us/pricing/calculator/)
-on 2026-11-26, at Eva's request, currency USD, not logged in (Microsoft Customer Agreement list prices).
+on 2026-11-26, at Dayara's request, currency USD, not logged in (Microsoft Customer Agreement list prices).
 
 | Calculator card | Settings entered | Price row in data/prices.csv |
 |---|---|---|
@@ -32,7 +32,7 @@ Not entered: migration services (AZ-O1 is NA), SAP and operating-system licences
 Evidence: five screenshots taken by Claude on 2026-11-26, kept in the project files under chat6/evidence/
 (azure-calc_0_summary, _1_virtual-machine, _2_disk-premium-ssd-v2, _3_snapshot, _4_bandwidth-support-total).
 [TODO: the estimate could not be saved as a link, because the calculator needs a Microsoft login for that.
-Optional: Eva logs in, rebuilds it with the settings above and saves the link.]
+Optional: Dayara logs in, rebuilds it with the settings above and saves the link.]
 
 ### 1.2 Calculator compared with the engine (USD per month)
 
@@ -80,7 +80,7 @@ cost order of the providers.
 ### 1.6 Google Cloud check (Chat 2, 2026-11-26)
 
 Entered by Claude in the public Google Cloud Pricing Calculator (https://cloud.google.com/products/calculator)
-on 2026-11-26, at Eva's request, currency USD, not signed in (list prices). Shareable estimate:
+on 2026-11-26, at Dayara's request, currency USD, not signed in (list prices). Shareable estimate:
 https://cloud.google.com/products/calculator/estimate-preview/CiQ0ZTkwZDRjNi1jYWUyLTQwZWUtOTNkNy05ZmEyMTkyMjFhZTcQAQ%3D%3D
 Evidence: five screenshots in the project files under chat2b/evidence/ (gcp-calc_1_compute, _2_hyperdisk,
 _3_snapshot, _4_network, _5_support).
@@ -166,7 +166,7 @@ Table 2.2: tool recommendation compared with the documented choice (source: page
 
 Plan: 2-3 SAP or cloud practitioners click through the page and answer eight questions. Their answers and
 objections are recorded verbatim on the form in notes/practitioner_form.md (one copy per person, coded P1-P3,
-no names). [TODO: Eva to recruit the practitioners and run the sessions; results go into table 3.2.]
+no names). [TODO: Dayara to recruit the practitioners and run the sessions; results go into table 3.2.]
 [CITATION NEEDED: method reference for expert walkthrough / expert evaluation of a design artefact.]
 
 ### 3.1 Session outline (about 30-40 minutes)
