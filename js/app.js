@@ -3,17 +3,40 @@
 // and fills the four tabs. Chat 5: AHP weights from data/pairwise.csv, both rankings in tab 3.
 // Chat 6: tab 4 shows switch-point tables for all weights and the main cost drivers.
 // It also switches tabs and shows the DEMO DATA notices.
+// Chat 2b: the real criteria files (data/normalisation.csv, data/criteria.csv) are used;
+// if one cannot be loaded, the page falls back to its demo twin and shows the DEMO notice for it.
 
 var App = {};
 
-// Which data files the page loads. To use real data later, change these names
-// (for example "data/criteria.csv"). A file name with "_demo" switches on the red DEMO notice.
+// Which data files the page loads. A file name with "_demo" switches on the red DEMO notice.
 // pairwise.csv holds Eva's AHP judgments for the two presets (real decisions, not demo).
 App.FILES = {
   prices: "data/prices.csv",
-  normalisation: "data/normalisation_demo.csv",
-  criteria: "data/criteria_demo.csv",
+  normalisation: "data/normalisation.csv",
+  criteria: "data/criteria.csv",
   pairwise: "data/pairwise.csv"
+};
+
+// Fallback files: used only if the real file above cannot be loaded (for example not uploaded yet).
+App.FALLBACK = {
+  normalisation: "data/normalisation_demo.csv",
+  criteria: "data/criteria_demo.csv"
+};
+
+// True if at least one criteria file is a demo file (then rankings are not findings).
+App.usesDemo = function () {
+  return App.FILES.normalisation.indexOf("_demo") >= 0 || App.FILES.criteria.indexOf("_demo") >= 0;
+};
+
+// Load one of the files in App.FILES. If it fails and there is a fallback file, load that instead
+// and remember the file name actually used (so the DEMO notice names the right file).
+App.loadWithFallback = function (key) {
+  return App.loadCsv(App.FILES[key]).catch(function (err) {
+    if (!App.FALLBACK[key]) throw err;
+    console.warn(err.message + " - using " + App.FALLBACK[key] + " instead");
+    App.FILES[key] = App.FALLBACK[key];
+    return App.loadCsv(App.FILES[key]);
+  });
 };
 
 // Names of the presets as the page shows them.
@@ -194,7 +217,9 @@ App.buildScores = function (providers, criteria, baseTotals) {
       var row = App.data.criteria.filter(function (r) { return r.provider === p && r.criterion_id === c.criterion_id; })[0];
       var s = row ? Cost.toNumber(row.score) : null;
       scores[p][c.criterion_id] = s;
-      cells[p][c.criterion_id] = { score: s, source: row ? row.source : "NA", confidence: row ? row.confidence : "NA" };
+      cells[p][c.criterion_id] = { score: s, source: row ? row.source : "NA", confidence: row ? row.confidence : "NA",
+                                   raw: row && row.raw_value ? row.raw_value + (row.raw_unit ? " " + row.raw_unit : "") : null,
+                                   date: row && row.date_captured ? row.date_captured : null };
     });
   });
   return { scores: scores, cells: cells };
@@ -379,12 +404,24 @@ App.showMatrix = function () {
     var row = [c.criterion_id + " " + c.criterion_name];
     L.providers.forEach(function (p) {
       var cell = L.cells[p][c.criterion_id];
-      row.push("score " + App.fmt(cell.score, 1) + " | source: " + cell.source + " | confidence: " + cell.confidence);
+      row.push("score " + App.fmt(cell.score, 2) + (cell.raw ? " | value: " + cell.raw : "") +
+               " | source: " + cell.source + (cell.date ? " (" + cell.date + ")" : "") + " | confidence: " + cell.confidence);
     });
     return row;
   });
   document.getElementById("matrix-table").innerHTML =
-    "<p>Scores from 1 (worst) to 9 (best). NA means no value in the data files.</p>" + App.table(header, rows);
+    "<p>Scores from 1 (worst) to 9 (best). NA means no value in the data files. Source links and quotes: " +
+    App.escape(App.FILES.criteria) + ".</p>" + App.table(header, rows) + App.rulesTable(L);
+};
+
+// Table of the scoring rules (only the real normalisation file has the scoring_rule column).
+App.rulesTable = function (L) {
+  if (!L.criteria.length || L.criteria[0].scoring_rule === undefined) return "";
+  var rows = L.criteria.map(function (c) {
+    return [c.criterion_id + " " + c.criterion_name, c.raw_measure || "NA", c.scoring_rule || "NA", c.checklist_items || "-"];
+  });
+  return "<h3>How the scores are calculated (" + App.escape(App.FILES.normalisation) + ")</h3>" +
+    App.table(["Criterion", "Value collected", "Scoring rule", "Checklist items"], rows);
 };
 
 // ---------- tab 3: Weighted result ----------
@@ -570,8 +607,8 @@ App.showSensitivity = function () {
   var winner = L.ranking[0].provider;
   var intro = "<p>Current recommendation (weighted sum, " + App.escape(App.PRESET_LABEL[L.profile.preset] || L.profile.preset) +
     " preset): <strong>" + App.escape(winner) + "</strong>. A <strong>switch-point</strong> is the value at which another provider " +
-    "comes out on top. Only one thing is changed at a time; everything else stays as in the form. " +
-    "While the criteria scores are DEMO values, these switch-points are provisional.</p>";
+    "comes out on top. Only one thing is changed at a time; everything else stays as in the form." +
+    (App.usesDemo() ? " While the criteria scores are DEMO values, these switch-points are provisional." : "") + "</p>";
 
   // Table 1: weights of all criteria.
   var wRes = Sens.allWeightSwitchPoints(L.scores, L.weights, 100);
@@ -708,11 +745,10 @@ App.showDemoNotices = function () {
 App.start = function () {
   App.setupTabs();
 
-  App.showDemoNotices();
-
-  Promise.all([App.loadCsv(App.FILES.prices), App.loadCsv(App.FILES.normalisation),
-               App.loadCsv(App.FILES.criteria), App.loadCsv(App.FILES.pairwise)])
+  Promise.all([App.loadCsv(App.FILES.prices), App.loadWithFallback("normalisation"),
+               App.loadWithFallback("criteria"), App.loadCsv(App.FILES.pairwise)])
     .then(function (results) {
+      App.showDemoNotices();       // after loading, so that a fallback to a demo file gets its notice
       App.data.prices = results[0];
       App.data.normalisation = results[1];
       App.data.criteria = results[2];

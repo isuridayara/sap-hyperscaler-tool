@@ -8,6 +8,18 @@
 
 var Sens = {};
 
+// Chat 2b: with the real criteria data many scores are equal (for example all providers score 9 on C2.1).
+// If one such criterion gets 100% of the weight, two or three providers have exactly the same total.
+// That is a tie, not a new winner, so a tie is never reported as a switch-point.
+Sens.TIE = "tie";
+
+// Leader of a ranking: the best provider, Sens.TIE if the best two totals are equal, or null if no total.
+Sens.leader = function (ranking) {
+  if (ranking[0].total === null) return null;
+  if (ranking.length > 1 && ranking[1].total !== null && Math.abs(ranking[0].total - ranking[1].total) < 1e-9) return Sens.TIE;
+  return ranking[0].provider;
+};
+
 // ---------- Part 1: weights ----------
 
 // Give one criterion a new weight and scale the other weights so that all still add up to 1.
@@ -26,8 +38,13 @@ Sens.reweight = function (weights, criterion, newWeight) {
 
 // Winner (provider name) for given scores and weights, or null if no total can be calculated.
 Sens.winner = function (scores, weights) {
-  var ranking = Mcda.weightedSum(scores, weights);
-  return ranking[0].total === null ? null : ranking[0].provider;
+  return Sens.leader(Mcda.weightedSum(scores, weights));
+};
+
+// Sweep points without the tied ones. A real switch can pass exactly through a tie (then the points
+// before and after it still have different winners); a tie at the end of the range (weight 100%) is left out.
+Sens.withoutTies = function (points) {
+  return points.filter(function (pt) { return pt.winner !== Sens.TIE; });
 };
 
 // Sweep: weight of `criterion` = 0, 1/steps, 2/steps ... 1. For each point keep all totals and the winner.
@@ -39,7 +56,7 @@ Sens.sweep = function (scores, weights, criterion, steps) {
     var ranking = Mcda.weightedSum(scores, Sens.reweight(weights, criterion, w));
     var totals = {};
     ranking.forEach(function (r) { totals[r.provider] = r.total; });
-    points.push({ weight: w, totals: totals, winner: ranking[0].total === null ? null : ranking[0].provider });
+    points.push({ weight: w, totals: totals, winner: Sens.leader(ranking) });
   }
   return points;
 };
@@ -48,6 +65,7 @@ Sens.sweep = function (scores, weights, criterion, steps) {
 // weight by halving the interval 30 times ("bisection").
 Sens.switchPoints = function (scores, weights, criterion, points) {
   var found = [];
+  points = Sens.withoutTies(points);
   for (var i = 1; i < points.length; i++) {
     var a = points[i - 1], b = points[i];
     if (a.winner === b.winner) continue;
@@ -86,7 +104,7 @@ Sens.driverSweep = function (values, evaluate) {
     var ranking = evaluate(v);
     var totals = {};
     ranking.forEach(function (r) { totals[r.provider] = r.total; });
-    return { value: v, totals: totals, winner: ranking[0].total === null ? null : ranking[0].provider };
+    return { value: v, totals: totals, winner: Sens.leader(ranking) };
   });
 };
 
@@ -97,10 +115,10 @@ Sens.driverSweep = function (values, evaluate) {
 //   "between value a and value b".
 Sens.driverSwitchPoints = function (points, evaluate, continuous) {
   function winnerAt(v) {
-    var r = evaluate(v);
-    return r[0].total === null ? null : r[0].provider;
+    return Sens.leader(evaluate(v));
   }
   var found = [];
+  points = Sens.withoutTies(points);
   for (var i = 1; i < points.length; i++) {
     var a = points[i - 1], b = points[i];
     if (a.winner === b.winner) continue;
