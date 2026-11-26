@@ -1,19 +1,19 @@
 preset,matrix,row,col,value,reason,decided_by,date_decided
-cost,groups,C1,C2,3,"Price leads for a cost-sensitive buyer, but ERP downtime is also costly, so only moderately more important",Eva,2026-11-20
-cost,groups,C1,C3,5,"All three providers offer EU regions and attestations; this buyer treats them as good enough and decides on price",Eva,2026-11-20
-cost,groups,C1,C4,5,"All three providers offer SAP tooling; this buyer treats it as good enough and decides on price",Eva,2026-11-20
-cost,groups,C2,C3,2,"Availability slightly more important than compliance for this buyer",Eva,2026-11-20
-cost,groups,C2,C4,2,"Availability slightly more important than SAP tooling for this buyer",Eva,2026-11-20
-cost,groups,C3,C4,1,"Compliance and SAP tooling equally (un)important for this buyer",Eva,2026-11-20
-cost,C1,C1.1,C1.2,5,"Reference profile needs 1 TiB, far below every provider's maximum, so price matters much more than scale-up range",Eva,2026-11-20
-cost,C2,C2.1,C2.2,1,"SLA and backup/DR equally important",Eva,2026-11-20
-cost,C3,C3.1,C3.2,1,"EU regions and attestations equally important",Eva,2026-11-20
-compliance,groups,C1,C2,1/2,"Availability and DR matter more than cost for a regulated buyer",Eva,2026-11-20
-compliance,groups,C1,C3,1/5,"Data residency and attestations are a deal-breaker for a regulated buyer; cost is strongly less important",Eva,2026-11-20
-compliance,groups,C1,C4,1,"Cost and SAP tooling are both minor for this buyer",Eva,2026-11-20
-compliance,groups,C2,C3,1/3,"Compliance first, but regulators also expect resilience, so availability stays close behind",Eva,2026-11-20
-compliance,groups,C2,C4,3,"Availability and DR moderately more important than SAP tooling",Eva,2026-11-20
-compliance,groups,C3,C4,5,"Residency and compliance strongly more important than SAP tooling",Eva,2026-11-20
-compliance,C1,C1.1,C1.2,3,"Price still matters more than scale-up range, but less than in the cost preset",Eva,2026-11-20
-compliance,C2,C2.1,C2.2,1/2,"A regulated buyer must prove recovery, so backup/DR counts slightly more than the SLA",Eva,2026-11-20
-compliance,C3,C3.1,C3.2,1/2,"Auditors ask for attestations (ISO 27001, SOC 2, BSI C5); beyond one certified EU region, more regions matter less",Eva,2026-11-20
+cost,groups,C1,C2,3,"Price leads for a cost-sensitive buyer, but ERP downtime is also costly, so only moderately more important",Dayara,2026-11-20
+cost,groups,C1,C3,5,"All three providers offer EU regions and attestations; this buyer treats them as good enough and decides on price",Dayara,2026-11-20
+cost,groups,C1,C4,5,"All three providers offer SAP tooling; this buyer treats it as good enough and decides on price",Dayara,2026-11-20
+cost,groups,C2,C3,2,"Availability slightly more important than compliance for this buyer",Dayara,2026-11-20
+cost,groups,C2,C4,2,"Availability slightly more important than SAP tooling for this buyer",Dayara,2026-11-20
+cost,groups,C3,C4,1,"Compliance and SAP tooling equally (un)important for this buyer",Dayara,2026-11-20
+cost,C1,C1.1,C1.2,5,"Reference profile needs 1 TiB, far below every provider's maximum, so price matters much more than scale-up range",Dayara,2026-11-20
+cost,C2,C2.1,C2.2,1,"SLA and backup/DR equally important",Dayara,2026-11-20
+cost,C3,C3.1,C3.2,1,"EU regions and attestations equally important",Dayara,2026-11-20
+compliance,groups,C1,C2,1/2,"Availability and DR matter more than cost for a regulated buyer",Dayara,2026-11-20
+compliance,groups,C1,C3,1/5,"Data residency and attestations are a deal-breaker for a regulated buyer; cost is strongly less important",Dayara,2026-11-20
+compliance,groups,C1,C4,1,"Cost and SAP tooling are both minor for this buyer",Dayara,2026-11-20
+compliance,groups,C2,C3,1/3,"Compliance first, but regulators also expect resilience, so availability stays close behind",Dayara,2026-11-20
+compliance,groups,C2,C4,3,"Availability and DR moderately more important than SAP tooling",Dayara,2026-11-20
+compliance,groups,C3,C4,5,"Residency and compliance strongly more important than SAP tooling",Dayara,2026-11-20
+compliance,C1,C1.1,C1.2,3,"Price still matters more than scale-up range, but less than in the cost preset",Dayara,2026-11-20
+compliance,C2,C2.1,C2.2,1/2,"A regulated buyer must prove recovery, so backup/DR counts slightly more than the SLA",Dayara,2026-11-20
+compliance,C3,C3.1,C3.2,1/2,"Auditors ask for attestations (ISO 27001, SOC 2, BSI C5); beyond one certified EU region, more regions matter less",Dayara,2026-11-20

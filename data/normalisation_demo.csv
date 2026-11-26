@@ -1,5 +1,5 @@
 criterion_id,criterion_name,group_id,group_name,direction,method,score_min,score_max,notes
-C1.1,Price of HANA-certified compute (scored from the 5-year base-case total cost),C1,Cost and capacity,lower_is_better,minmax_from_cost,1,9,"Real: scored from data/prices.csv via the cost engine (cheapest = 9). Decision Eva 2026-11-20: total base-case cost instead of EUR per GB RAM-hour"
+C1.1,Price of HANA-certified compute (scored from the 5-year base-case total cost),C1,Cost and capacity,lower_is_better,minmax_from_cost,1,9,"Real: scored from data/prices.csv via the cost engine (cheapest = 9). Decision Dayara 2026-11-20: total base-case cost instead of EUR per GB RAM-hour"
 C1.2,Certified scale-up range (largest certified single-node memory),C1,Cost and capacity,higher_is_better,matrix_score,1,9,DEMO - not a real value
 C2.1,Availability (published VM SLA for a multi-zone setup),C2,Availability and DR,higher_is_better,matrix_score,1,9,DEMO - not a real value
 C2.2,HANA backup and DR (checklist),C2,Availability and DR,higher_is_better,matrix_score,1,9,DEMO - not a real value
