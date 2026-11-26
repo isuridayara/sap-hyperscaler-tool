@@ -1,6 +1,8 @@
 // app.js - connects the page to the engines.
 // It loads the CSV files, reads the form, runs cost.js, mcda.js and sensitivity.js,
-// and fills the four tabs. Chat 5: AHP weights from data/pairwise.csv, both rankings in tab 3. It also switches tabs and shows the DEMO DATA notices.
+// and fills the four tabs. Chat 5: AHP weights from data/pairwise.csv, both rankings in tab 3.
+// Chat 6: tab 4 shows switch-point tables for all weights and the main cost drivers.
+// It also switches tabs and shows the DEMO DATA notices.
 
 var App = {};
 
@@ -175,19 +177,10 @@ App.presetWeights = function (preset, ids) {
 
 // ---------- calculation ----------
 
-App.calculate = function () {
-  App.status("");                  // clear an old error message
-  var profile = App.readProfile();
-  var providers = App.unique(App.data.prices, "provider");
-  var criteria = App.data.normalisation;
-
-  // 1. Costs (low / base / high) per provider.
-  var costs = {};
-  providers.forEach(function (p) { costs[p] = Cost.scenarios(App.data.prices, p, profile); });
-
-  // 2. Scores per provider and criterion (1-9). Cost is calculated, the rest comes from the matrix.
-  var baseTotals = {};
-  providers.forEach(function (p) { baseTotals[p] = costs[p].base.total; });
+// Scores per provider and criterion (1-9). The cost criterion is calculated from the base-case totals,
+// the other criteria come from the criteria file. Chat 6: moved into its own function so that the
+// Sensitivity tab can recalculate the scores when a cost driver changes.
+App.buildScores = function (providers, criteria, baseTotals) {
   var costScore = Mcda.costScores(baseTotals);
   var scores = {}, cells = {};
   providers.forEach(function (p) {
@@ -204,6 +197,45 @@ App.calculate = function () {
       cells[p][c.criterion_id] = { score: s, source: row ? row.source : "NA", confidence: row ? row.confidence : "NA" };
     });
   });
+  return { scores: scores, cells: cells };
+};
+
+// The total used for the cost score. If compute has no price (for example no certified machine is big enough),
+// the total would leave out about 97% of the bill and could not be compared with the other providers,
+// so the cost score becomes NA instead (Chat 6: found with the Arvato case, 6 TB memory).
+App.comparableTotal = function (period) {
+  return period.missing.indexOf("compute") >= 0 ? null : period.total;
+};
+
+// Ranking for a changed company profile, with the weights of the last calculation.
+// extraDiscount (optional) = { provider: percent } gives ONE provider an extra discount,
+// like a negotiated deal that the other providers do not give. Used by the Sensitivity tab.
+App.rankFor = function (profile, extraDiscount) {
+  var L = App.last;
+  extraDiscount = extraDiscount || {};
+  var baseTotals = {};
+  L.providers.forEach(function (p) {
+    var pr = Object.assign({}, profile, { discountPct: Math.min(90, profile.discountPct + (extraDiscount[p] || 0)) });
+    baseTotals[p] = App.comparableTotal(Cost.scenarios(App.data.prices, p, pr).base);
+  });
+  return Mcda.weightedSum(App.buildScores(L.providers, L.criteria, baseTotals).scores, L.weights);
+};
+
+App.calculate = function () {
+  App.status("");                  // clear an old error message
+  var profile = App.readProfile();
+  var providers = App.unique(App.data.prices, "provider");
+  var criteria = App.data.normalisation;
+
+  // 1. Costs (low / base / high) per provider.
+  var costs = {};
+  providers.forEach(function (p) { costs[p] = Cost.scenarios(App.data.prices, p, profile); });
+
+  // 2. Scores per provider and criterion (1-9). Cost is calculated, the rest comes from the matrix.
+  var baseTotals = {};
+  providers.forEach(function (p) { baseTotals[p] = App.comparableTotal(costs[p].base); });
+  var built = App.buildScores(providers, criteria, baseTotals);
+  var scores = built.scores, cells = built.cells;
 
   // 3. Weights from AHP.
   var ids = criteria.map(function (c) { return c.criterion_id; });
@@ -497,8 +529,107 @@ App.weightsHtml = function (L, ids, name) {
 
 // ---------- tab 4: Sensitivity ----------
 
+// The cost drivers that tab 4 changes one at a time (Chat 6). For each driver: a label, the value now,
+// the values that are tried, whether values in between make sense (continuous), how a value is shown,
+// and evaluate(value) = the ranking when only this driver has that value (everything else as in the form).
+App.costDrivers = function (L) {
+  var P = L.profile;
+  function withValue(key) {
+    return function (v) { var pr = Object.assign({}, P); pr[key] = v; return App.rankFor(pr); };
+  }
+  function pct(v) { return App.fmt(v, 1) + "%"; }   // e.g. 7.5%
+  var drivers = L.providers.map(function (p) {
+    return { label: "Extra discount given only by " + p, now: 0, values: Sens.range(0, 60, 5), continuous: true,
+             show: pct, evaluate: function (v) { var e = {}; e[p] = v; return App.rankFor(P, e); } };
+  });
+  drivers.push({ label: "Same discount from all providers", now: P.discountPct, values: Sens.range(0, 60, 5),
+                 continuous: true, show: pct, evaluate: withValue("discountPct") });
+  drivers.push({ label: "SAP HANA memory size (GB)", now: P.hanaMemoryGb, values: [256, 512, 768, 1024, 1536, 2048, 3072, 4096],
+                 continuous: false, show: function (v) { return App.fmt(v, 0) + " GB"; }, evaluate: withValue("hanaMemoryGb") });
+  drivers.push({ label: "Data growth per year", now: P.growthPct, values: Sens.range(0, 50, 5),
+                 continuous: true, show: pct, evaluate: withValue("growthPct") });
+  drivers.push({ label: "Outbound network traffic (GB per month)", now: P.networkGbMonth, values: Sens.range(0, 20000, 1000),
+                 continuous: true, show: function (v) { return App.fmt(v, 0) + " GB"; }, evaluate: withValue("networkGbMonth") });
+  drivers.push({ label: "Evaluation period (years)", now: P.years, values: Sens.range(1, 10, 1),
+                 continuous: false, show: function (v) { return App.fmt(v, 0); }, evaluate: withValue("years") });
+  return drivers;
+};
+
 App.showSensitivity = function () {
   var L = App.last;
+  if (L.ranking[0].total === null) {          // no provider has a complete total, so there is nothing to switch
+    document.getElementById("switch-summary").innerHTML =
+      "<p><strong>No recommendation, so no switch-points.</strong> At least one score is NA for every provider " +
+      "(see the Cost comparison and Criteria matrix tabs, for example no certified machine is large enough for the memory size).</p>";
+    document.getElementById("switch-points").innerHTML = "";
+    App.drawChart("sens-chart", { type: "line", data: { labels: [], datasets: [] } });
+    return;
+  }
+  var name = {};
+  L.criteria.forEach(function (c) { name[c.criterion_id] = c.criterion_name; });
+  var winner = L.ranking[0].provider;
+  var intro = "<p>Current recommendation (weighted sum, " + App.escape(App.PRESET_LABEL[L.profile.preset] || L.profile.preset) +
+    " preset): <strong>" + App.escape(winner) + "</strong>. A <strong>switch-point</strong> is the value at which another provider " +
+    "comes out on top. Only one thing is changed at a time; everything else stays as in the form. " +
+    "While the criteria scores are DEMO values, these switch-points are provisional.</p>";
+
+  // Table 1: weights of all criteria.
+  var wRes = Sens.allWeightSwitchPoints(L.scores, L.weights, 100);
+  var wRows = [];
+  wRes.forEach(function (r) {
+    var label = r.criterion + " " + (name[r.criterion] || "");
+    if (r.switches.length === 0) {
+      wRows.push([label, App.num(App.pct(r.weight)), "none (0-100%)", "-", App.num("-")]);
+      return;
+    }
+    r.switches.forEach(function (s) {
+      var to = s.from === winner ? s.to : s.from;     // the provider that wins on the other side
+      wRows.push([label, App.num(App.pct(r.weight)), App.num(App.pct(s.weight)), to,
+                  App.num(App.fmt((s.weight - r.weight) * 100, 1))]);
+    });
+  });
+  var closest = wRes.filter(function (r) { return r.margin !== null; })
+                    .sort(function (a, b) { return Math.abs(a.margin) - Math.abs(b.margin); })[0];
+  var wText = closest
+    ? "<p>Most sensitive weight: <strong>" + App.escape(closest.criterion) + "</strong>. Moving it by " +
+      App.fmt(Math.abs(closest.margin) * 100, 1) + " percentage points (to " + App.pct(closest.nearest.weight) +
+      ") changes the recommendation.</p>"
+    : "<p>No weight change between 0% and 100% changes the recommendation.</p>";
+
+  // Table 2: cost drivers.
+  var dRows = [];
+  App.costDrivers(L).forEach(function (d) {
+    var points = Sens.driverSweep(d.values, d.evaluate);
+    var switches = Sens.driverSwitchPoints(points, d.evaluate, d.continuous);
+    var range = d.show(d.values[0]) + " to " + d.show(d.values[d.values.length - 1]);
+    if (switches.length === 0) {
+      dRows.push([d.label, App.num(d.show(d.now)), range, "none in this range", "-"]);
+      return;
+    }
+    switches.forEach(function (s) {
+      var at = s.value === null ? "between " + d.show(s.between[0]) + " and " + d.show(s.between[1]) : d.show(s.value);
+      dRows.push([d.label, App.num(d.show(d.now)), range, at, s.from + " → " + s.to]);
+    });
+  });
+
+  document.getElementById("switch-summary").innerHTML = intro +
+    "<h3>Switch-points 1: weights</h3>" +
+    "<p>The weight of one criterion goes from 0% to 100%; the other weights keep their proportions. " +
+    "Distance = switch-point minus current weight, in percentage points.</p>" +
+    App.table(["Criterion", "Weight now", "Switch-point (weight)", "Winner on the other side", "Distance (pp)"], wRows) + wText +
+    "<h3>Switch-points 2: cost drivers</h3>" +
+    "<p>One input of the cost model is changed; costs and the cost score (C1.1) are recalculated, the weights stay the same. " +
+    "The cost score compares the providers with each other, so a discount that all providers give equally hardly " +
+    "changes anything; a discount from one provider only (a negotiated deal) can.</p>" +
+    App.table(["Cost driver", "Value now", "Range tested", "Switch-point", "Winner changes"], dRows);
+
+  App.showWeightDetail();
+};
+
+// Detail for one criterion (chosen in the list): its switch-points and a chart of all totals.
+App.showWeightDetail = function () {
+  var L = App.last;
+  if (L.ranking[0].total === null) return;    // see App.showSensitivity
   var crit = document.getElementById("sens-criterion").value;
   var points = Sens.sweep(L.scores, L.weights, crit, 20);
   var switches = Sens.switchPoints(L.scores, L.weights, crit, points);
@@ -591,7 +722,7 @@ App.start = function () {
         e.preventDefault();        // stay on the page instead of reloading it
         App.calculate();
       });
-      document.getElementById("sens-criterion").addEventListener("change", App.showSensitivity);
+      document.getElementById("sens-criterion").addEventListener("change", App.showWeightDetail);
       App.calculate();             // first result with the example values
     })
     .catch(function (err) {
