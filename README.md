@@ -27,7 +27,7 @@ The SAP-managed bundle (SAP Cloud ERP Private, earlier RISE with SAP) is not pri
 | `notes/calculator_check.md`, `notes/validation.md` | validation: calculator checks, cases, practitioner walkthrough, switch-points |
 | `notes/validation_cases.md`, `notes/practitioner_form.md` | case extraction sheet and practitioner answer form |
 | `notes/mcda_results.md` | weights and rankings |
-| `notes/citations_needed.md`, `notes/eva_todo.md` | open references and open tasks |
+| `notes/citations_needed.md`, `notes/dayara_todo.md` | open references and open tasks |
 
 ## Price data
 
