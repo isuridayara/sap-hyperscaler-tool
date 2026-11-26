@@ -16,9 +16,18 @@ The SAP-managed bundle (SAP Cloud ERP Private, earlier RISE with SAP) is not pri
 | `js/sensitivity.js` | sensitivity analysis |
 | `js/app.js` | loads the data files and fills the page |
 | `data/prices.csv` | real public list prices (27 rows) |
-| `data/*_demo.csv` | demo data, marked by the red DEMO DATA banner |
+| `data/normalisation.csv` | the seven criteria, what each measures and its scoring rule |
+| `data/criteria.csv` | real evidence per provider and criterion (value, score, source link, date) |
+| `data/pairwise.csv` | AHP judgments for the two weight presets |
+| `data/*_demo.csv` | demo data, used only as fallback if a real file is missing (then marked DEMO) |
+| `tests.html` | automatic checks (open it on the live page; all rows should say PASS) |
 | `notes/decisions.md` | rules and decisions |
 | `notes/scope_assumption.md` | what the tool compares and what it leaves out |
+| `notes/reference_profile.md` | the reference company profile the results are based on |
+| `notes/calculator_check.md`, `notes/validation.md` | validation: calculator checks, cases, practitioner walkthrough, switch-points |
+| `notes/validation_cases.md`, `notes/practitioner_form.md` | case extraction sheet and practitioner answer form |
+| `notes/mcda_results.md` | weights and rankings |
+| `notes/citations_needed.md`, `notes/eva_todo.md` | open references and open tasks |
 
 ## Price data
 

@@ -20,6 +20,7 @@
   <h1>Automatic checks of the calculation code</h1>
   <p>This page runs js/mcda.js and js/sensitivity.js with known inputs and compares the result with the expected value
     (worked out by hand in Chat 5 and Chat 6, or an obvious property such as "weights add up to 1").
+    Chat 2b adds checks of the real criteria files: every score must follow the scoring rule in data/normalisation.csv.
     Every row should say PASS. Open it on GitHub Pages: tests.html after the page address.</p>
   <div id="summary">Running...</div>
   <div id="results"></div>
@@ -159,6 +160,13 @@
     check(G, "Stepwise driver: switch-point reported as between 10 and 15", disc[0].between, [10, 15]);
     check(G, "range(0, 60, 5) gives 13 values from 0 to 60", [Sens.range(0, 60, 5).length, Sens.range(0, 60, 5)[12]], [13, 60]);
 
+    // Ties (Chat 2b): A and B score the same on x. With 100% weight on x they tie; that is not a switch-point.
+    var tieS = { A: { x: 9, y: 9 }, B: { x: 9, y: 5 } };
+    check(G, "Equal totals at the top are reported as a tie",
+          Sens.leader(Mcda.weightedSum(tieS, { x: 1, y: 0 })), Sens.TIE);
+    check(G, "A tie at weight 100% is not a switch-point",
+          Sens.switchPoints(tieS, w2, "x", Sens.sweep(tieS, w2, "x", 20)).length, 0);
+
     // ---------- Eva's two presets from data/pairwise.csv ----------
     // Expected weights were also calculated outside the page (Python, numpy eigenvector) in Chat 5.
     var IDS = ["C1.1", "C1.2", "C2.1", "C2.2", "C3.1", "C3.2", "C4.1"];
@@ -184,6 +192,40 @@
       });
     }
 
+    // ---------- the real criteria files (Chat 2b) ----------
+    // Recalculate every score in data/criteria.csv from its raw value with the rules in data/normalisation.csv.
+    function criteriaChecks(norm, crit) {
+      var G3 = "Real criteria files";
+      check(G3, "data/normalisation.csv: 7 criteria C1.1 to C4.1, each with a scoring rule",
+            [norm.map(function (c) { return c.criterion_id; }), norm.every(function (c) { return !!c.scoring_rule; })], [IDS, true]);
+      check(G3, "data/criteria.csv: 18 rows (6 criteria x 3 providers; C1.1 comes from the cost engine)", crit.length, 18);
+      check(G3, "Every row has a source_url and a date_captured (YYYY-MM-DD)",
+            crit.filter(function (r) { return !r.source_url || !/^\d{4}-\d{2}-\d{2}$/.test(r.date_captured); })
+                .map(function (r) { return r.provider + " " + r.criterion_id; }), []);
+      function rowsOf(c) { return crit.filter(function (r) { return r.criterion_id === c; }); }
+      function num(x) { var v = parseFloat(x); return isNaN(v) ? null : v; }
+      // C1.2 and C3.1: 1 + 8 x value / best value
+      ["C1.2", "C3.1"].forEach(function (c) {
+        var rs = rowsOf(c), best = Math.max.apply(null, rs.map(function (r) { return num(r.raw_value); }));
+        rs.forEach(function (r) {
+          check(G3, c + " " + r.provider + ": score = 1 + 8 x " + r.raw_value + " / " + best, num(r.score), round(1 + 8 * num(r.raw_value) / best, 2), 0.011);
+        });
+      });
+      // C2.1: 1 + 8 x (100 - best SLA) / (100 - SLA)
+      var sla = rowsOf("C2.1"), bestSla = Math.max.apply(null, sla.map(function (r) { return num(r.raw_value); }));
+      sla.forEach(function (r) {
+        check(G3, "C2.1 " + r.provider + ": score from allowed downtime (" + r.raw_value + "%)", num(r.score),
+              round(1 + 8 * (100 - bestSla) / (100 - num(r.raw_value)), 2), 0.011);
+      });
+      // Checklists: 1 + 8 x items met / items
+      ["C2.2", "C3.2", "C4.1"].forEach(function (c) {
+        rowsOf(c).forEach(function (r) {
+          var m = /^(\d+) of (\d+)$/.exec(r.raw_value);
+          check(G3, c + " " + r.provider + ": checklist " + r.raw_value, num(r.score), m ? round(1 + 8 * m[1] / m[2], 2) : "raw value not 'k of n'", 0.011);
+        });
+      });
+    }
+
     // ---------- show the results ----------
     function show() {
       var passed = results.filter(function (r) { return r.ok; }).length;
@@ -206,11 +248,17 @@
       document.getElementById("results").innerHTML = html + "</tbody></table>";
     }
 
-    // The preset checks need data/pairwise.csv, which can only be loaded from a web server (GitHub Pages).
-    fetch("data/pairwise.csv")
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
-      .then(function (text) { presetChecks(Papa.parse(text, { header: true, skipEmptyLines: true }).data); })
+    // The file checks need the data files, which can only be loaded from a web server (GitHub Pages).
+    function load(url) {
+      return fetch(url).then(function (r) { if (!r.ok) throw new Error(url + ": HTTP " + r.status); return r.text(); })
+        .then(function (text) { return Papa.parse(text, { header: true, skipEmptyLines: true }).data; });
+    }
+    load("data/pairwise.csv")
+      .then(presetChecks)
       .catch(function (err) { check("Preset files", "data/pairwise.csv can be loaded", String(err), "loaded"); })
+      .then(function () { return Promise.all([load("data/normalisation.csv"), load("data/criteria.csv")]); })
+      .then(function (f) { criteriaChecks(f[0], f[1]); })
+      .catch(function (err) { check("Real criteria files", "data/normalisation.csv and data/criteria.csv can be loaded", String(err), "loaded"); })
       .then(show);
   </script>
 </body>
