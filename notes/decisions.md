@@ -48,3 +48,22 @@ Decisions and rules for the S/4HANA hyperscaler decision-support prototype. Newe
   so tabs 2-4 keep the red DEMO notice and the rankings are not findings yet.
 - TOPSIS is the cross-check. If its order differs from the AHP weighted sum, the page writes "FINDING".
 - tests.html added: 47 automatic checks of AHP, weighted sum, TOPSIS and both presets.
+
+## Chat 6 (2026-11-23 to 2026-11-26): validation and switch-points
+
+- Vector 1: the calculator check was repeated for Microsoft Azure (AWS was done in Chat 4). Entered by Claude in
+  the public Azure Pricing Calculator on 2026-11-26 at Eva's request; screenshots kept in the project files.
+  Result: -0.13% (free 100 GB egress is the only difference). Details: notes/validation.md, section 1.
+- Vector 2: three documented cases (VHV/AWS, Arvato/Azure, Deutsche Börse/Google Cloud). No source gives the
+  database size, so each case is run with the reference profile plus the values the source gives
+  (agreed by Eva on 2026-11-26). Extraction: notes/validation_cases.md.
+- Defect found with the Arvato case and fixed: if a provider has no compute price (no certified machine large
+  enough), its cost score is now NA (App.comparableTotal in js/app.js). Before, the score was calculated from a
+  total without compute and gave a wrong ranking.
+- Vector 3: practitioner walkthrough with 8 questions; form in notes/practitioner_form.md.
+- Sensitivity: tab 4 shows switch-points for all seven weights and for the main cost drivers. Cost drivers
+  include a discount given by ONE provider only, because the cost score compares providers with each other and an
+  equal discount for all hardly changes the order. Ranges tested: discounts 0-60%, memory 256-4,096 GB,
+  growth 0-50%, traffic 0-20,000 GB per month, 1-10 years.
+- tests.html: 10 new checks for js/sensitivity.js (57 in total).
+- All switch-points and case results are provisional while six criteria use DEMO scores.
