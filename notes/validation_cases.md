@@ -13,7 +13,7 @@ mentions RISE with SAP / SAP Cloud ERP Private.
 
 | Field | Value from the source | Dayara checked |
 |---|---|---|
-| Source | AWS Partner Success story "VHV Group ... Netlution", https://aws.amazon.com/partners/success/vhv-netlution/ (date not shown; page updated 2026-11-17) | [ ] |
+| Source | AWS Partner Success story "VHV Group ... Netlution", https://aws.amazon.com/partners/success/vhv-netlution/ (date not shown; page updated 2026-11-17) | [*] |
 | Source type | Vendor-published (AWS), with the partner (Netlution) | [*] |
 | Company | VHV Group, Hanover, Germany; insurance; about 4,000 employees | [*] |
 | SAP | "several dozen" on-premises SAP systems, upgrade to S/4HANA; BW already moved, ERP in progress | [*] |
