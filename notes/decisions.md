@@ -27,6 +27,7 @@ Decisions and rules for the S/4HANA hyperscaler decision-support prototype. Newe
   banner appears only if a demo prices file is loaded. The Cost tab runs on data/prices.csv without a banner.
 - Decision (Eva, 2026-11-19): reference profile confirmed (notes/reference_profile.md): 600 GB HANA data, 900 GB
   memory (1,024 GiB step), 10% growth per year, 500 GB egress per month, 5 years, EU Frankfurt, list price.
+  Changed by Eva on 2026-11-26: memory 1,200 GB (2 x data, SAP sizing rule), which gives the 2,048 GiB step.
   The form on the page opens with these values. All values are assumptions [CITATION NEEDED].
 - Decision (Eva, 2026-11-19): at list price the high case cannot go above the list price, so high differs from base
   only by faster data growth. This is kept and explained on the page; no price-increase assumption is added.
@@ -67,3 +68,32 @@ Decisions and rules for the S/4HANA hyperscaler decision-support prototype. Newe
   growth 0-50%, traffic 0-20,000 GB per month, 1-10 years.
 - tests.html: 10 new checks for js/sensitivity.js (57 in total).
 - All switch-points and case results are provisional while six criteria use DEMO scores.
+
+## Chat 2 completed (2026-11-26): real criteria data
+
+- Files: data/normalisation.csv (what each criterion measures, scoring rule, checklist items, where to look) and
+  data/criteria.csv (one row per provider and criterion C1.2-C4.1: raw value, score, source_url, date_captured,
+  confidence, quote). They keep the roles of the demo files, so js/app.js changed only a little. The demo files stay
+  in the repository as fallback: if a real file cannot be loaded, the page uses the demo file and shows the DEMO notice.
+- Decision (Eva, 2026-11-26): scoring rules. C1.2 and C3.1: score = 1 + 8 x value / best value. C2.1: compares allowed
+  downtime, score = 1 + 8 x (100 - best SLA) / (100 - SLA). Checklists C2.2 (2 items), C3.2 (4 items), C4.1 (3 items):
+  score = 1 + 8 x items met / items; an item counts only if a public source shows it. C1.1 unchanged (min-max from cost).
+- Rules for C3.1 (Claude, written in the notes column): "EU" = EU member states; regions closed to normal customers
+  are not counted (Azure France South, Germany North, Sweden South); the AWS European Sovereign Cloud is not counted
+  (separate partition with its own accounts). Counted at family/series level from the providers' region pages; for
+  Azure from the public Retail Prices API.
+- Azure SLA (C2.1) read from the SLA document Eva downloaded (Microsoft Online Services, November 17 2026): 99.99%.
+- AWS SOC 2 Type 2: wording found in the AWS Security Blog (2023-11-29); the current SOC page shows the 12-month reports.
+- Result: four of six non-cost criteria tie (all 9). Google Cloud scores at least as high as the others on every
+  criterion for the reference profile, so both presets recommend Google Cloud, AHP and TOPSIS agree, and no weight
+  has a switch-point. Cost drivers still change the result (memory size, provider-specific discount, traffic).
+  Details: notes/mcda_results.md section 6, notes/validation.md sections 2 and 4.
+- js/sensitivity.js: a tie at the top is no longer reported as a switch-point (Sens.TIE).
+- tests.html: 80 checks (2 for ties, 21 that recalculate every score in data/criteria.csv from its raw value).
+
+- Decision (Eva, 2026-11-26): memory rule changed from 1.5 x data to 2 x data. No source was found for 1.5x;
+  SAP Learning ("Performing SAP HANA Sizing") says total RAM = static data RAM x 2. Reference profile memory is now
+  1,200 GB, so the engine picks the 2,048 GiB machines (AWS-C3, AZ-C3, GC-C3). Form default changed in index.html.
+  The order stays Google Cloud > Azure > AWS. The traffic switch-point disappears (none up to 20,000 GB/month).
+  The calculator checks (AWS, Azure, Google Cloud) were done at the 1,024 GiB step and stay valid as a check of
+  the engine's arithmetic and prices; they were not repeated for 2,048 GiB.

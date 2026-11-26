@@ -6,7 +6,8 @@ workload is entered. Provider checked: AWS (one provider only, as planned).
 
 ## 1. Workload entered (reference profile, Year 1, base case, one month)
 
-Taken from notes/reference_profile.md: 600 GB HANA data, 900 GB memory -> 1,024 GiB step, 500 GB outbound
+Taken from notes/reference_profile.md as it was on 2026-11-20 (memory changed to 1,200 GB / 2,048 GiB on 2026-11-26;
+this check was not repeated, it tests prices and arithmetic): 600 GB HANA data, 900 GB memory -> 1,024 GiB step, 500 GB outbound
 traffic per month, EU Frankfurt (eu-central-1), list price, on-demand, Linux.
 
 | Part | What is entered | Price row in data/prices.csv |

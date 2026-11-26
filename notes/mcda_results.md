@@ -2,10 +2,9 @@
 
 Date: 2026-11-20. Code: js/mcda.js, js/app.js. Judgments: data/pairwise.csv. Checks: tests.html (47 of 47 PASS).
 
-> **Status of the rankings: DEMO.** The weights and consistency ratios below are final (Eva's judgments).
-> The rankings use real data only for C1.1 (cost, from data/prices.csv). The scores for C1.2 to C4.1 come from
-> data/criteria_demo.csv and are invented placeholders. The rankings must be recalculated when the real
-> criteria scores exist, and must not be reported as findings before that.
+> **Status (Chat 2, 2026-11-26): real data.** All seven criteria now use real evidence: C1.1 from data/prices.csv,
+> C1.2 to C4.1 from data/criteria.csv (source link, date and quote per value) with the scoring rules in
+> data/normalisation.csv. The rankings in section 6 replace the demo rankings of Chat 5.
 
 ## 1. Method
 
@@ -28,7 +27,7 @@ Date: 2026-11-20. Code: js/mcda.js, js/app.js. Judgments: data/pairwise.csv. Che
 
 ## 2. Criteria and groups
 
-Table 1. Criteria hierarchy (source: data/normalisation_demo.csv)
+Table 1. Criteria hierarchy (source: data/normalisation.csv)
 
 | Group | Criterion | Direction |
 |---|---|---|
@@ -101,54 +100,77 @@ Table 6. Final weights = group weight x local weight (source: tab 3 of the page,
 | C4.1 | 0.109 | 0.098 |
 | **Sum** | 1.000 | 1.000 (0.001 rounding) |
 
-## 6. Rankings (DEMO, reference profile)
+## 6. Rankings (real data, reference profile)
 
-Inputs: reference profile (notes/reference_profile.md): 900 GB memory, 600 GB data, 10% growth, 500 GB/month egress,
+Inputs: reference profile (notes/reference_profile.md): 1,200 GB memory (2 x data, changed 2026-11-26), 600 GB data, 10% growth, 500 GB/month egress,
 5 years, EU Frankfurt, list price. C1.1 scores from the 5-year base-case totals
-(Google Cloud 322,376 EUR = 9.0; Microsoft Azure 367,213 EUR = 4.8; AWS 407,784 EUR = 1.0).
-All other scores: data/criteria_demo.csv (**DEMO - invented**).
+(Google Cloud 634,505 EUR = 9.0; Microsoft Azure 721,139 EUR = 4.97; AWS 806,535 EUR = 1.0).
+C1.2 to C4.1: data/criteria.csv, scored with the rules in data/normalisation.csv (decision Eva, 2026-11-26).
+Run on 2026-11-26 (local copy of the Chat 2 page; tests.html 80 of 80 PASS).
 
-Table 7. Cost-sensitive preset: both rankings (source: tab 3 of the page, 2026-11-20; DEMO scores)
+Table 7. Criteria scores (source: data/criteria.csv, data/prices.csv)
+
+| Criterion | Raw value AWS / Azure / Google Cloud | AWS | Microsoft Azure | Google Cloud |
+|---|---|---|---|---|
+| C1.1 5-year base cost | 806,535 / 721,139 / 634,505 EUR | 1.00 | 4.97 | 9.00 |
+| C1.2 largest certified memory | 32 / 29.69 / 32 TiB | 9.00 | 8.42 | 9.00 |
+| C2.1 multi-zone VM SLA | 99.99 / 99.99 / 99.99 % | 9.00 | 9.00 | 9.00 |
+| C2.2 backup and DR | 2 / 2 / 2 of 2 | 9.00 | 9.00 | 9.00 |
+| C3.1 EU regions with certified instances | 6 / 11 / 11 | 5.36 | 9.00 | 9.00 |
+| C3.2 attestations | 4 / 4 / 4 of 4 | 9.00 | 9.00 | 9.00 |
+| C4.1 SAP tooling | 3 / 3 / 3 of 3 | 9.00 | 9.00 | 9.00 |
+
+Four of the six non-cost criteria do not separate the providers (all score 9). Only cost (C1.1), EU regions (C3.1)
+and, slightly, scale-up range (C1.2) differ. Google Cloud scores at least as high as both others on every criterion
+for this profile, so it ranks first for **any** set of weights (it "dominates" here).
+
+Table 8. Cost-sensitive preset: both rankings (source: tab 3 of the page, 2026-11-26)
 
 | Provider | AHP total | AHP rank | TOPSIS closeness | TOPSIS rank |
 |---|---|---|---|---|
-| Google Cloud | 7.69 | 1 | 0.915 | 1 |
-| Microsoft Azure | 6.46 | 2 | 0.479 | 2 |
-| AWS | 4.49 | 3 | 0.054 | 3 |
+| Google Cloud | 9.00 | 1 | 1.000 | 1 |
+| Microsoft Azure | 7.02 | 2 | 0.497 | 2 |
+| AWS | 4.98 | 3 | 0.010 | 3 |
 
 Same order in both methods.
 
-Table 8. Cost-sensitive preset: contribution of each criterion to the gap (AHP weighted sum; DEMO scores)
+Table 9. Cost-sensitive preset: contribution of each criterion to the gap (AHP weighted sum)
 
 | Comparison | Total gap | C1.1 | C1.2 | C2.1 | C2.2 | C3.1 | C3.2 | C4.1 |
 |---|---|---|---|---|---|---|---|---|
-| Google Cloud vs Microsoft Azure | 1.226 | 2.003 | -0.286 | 0.000 | 0.000 | -0.164 | -0.109 | -0.219 |
-| Google Cloud vs AWS | 3.198 | 3.816 | -0.191 | -0.105 | -0.105 | -0.055 | -0.055 | -0.109 |
+| Google Cloud vs Microsoft Azure | 1.977 | 1.922 | 0.055 | 0 | 0 | 0 | 0 | 0 |
+| Google Cloud vs AWS | 4.015 | 3.816 | 0 | 0 | 0 | 0.199 | 0 | 0 |
 
-Table 9. Compliance-sensitive preset: both rankings (source: tab 3 of the page, 2026-11-20; DEMO scores)
+Table 10. Compliance-sensitive preset: both rankings (source: tab 3 of the page, 2026-11-26)
 
 | Provider | AHP total | AHP rank | TOPSIS closeness | TOPSIS rank |
 |---|---|---|---|---|
-| Microsoft Azure | 7.62 | 1 | 0.710 | 1 |
-| AWS | 6.66 | 2 | 0.331 | 3 |
-| Google Cloud | 6.36 | 3 | 0.432 | 2 |
+| Google Cloud | 9.00 | 1 | 1.000 | 1 |
+| Microsoft Azure | 8.66 | 2 | 0.651 | 2 |
+| AWS | 7.67 | 3 | 0.013 | 3 |
 
-**Different order in places 2 and 3** (AHP: AWS before Google Cloud; TOPSIS: Google Cloud before AWS).
-On demo data this only shows that the cross-check works. A possible reason: TOPSIS measures distance to the
-worst value, and AWS has the worst C1.1 score (1.0), which pulls it towards the anti-ideal even with a small
-C1.1 weight. [TODO: re-check with real scores; if the disagreement remains, report it as a finding.]
+Same order in both methods. The AHP/TOPSIS disagreement seen on demo data in Chat 5 does not appear with real data.
 
-Table 10. Compliance-sensitive preset: contribution of each criterion to the gap (AHP weighted sum; DEMO scores)
+Table 11. Compliance-sensitive preset: contribution of each criterion to the gap (AHP weighted sum)
 
 | Comparison | Total gap | C1.1 | C1.2 | C2.1 | C2.2 | C3.1 | C3.2 | C4.1 |
 |---|---|---|---|---|---|---|---|---|
-| Microsoft Azure vs AWS | 0.955 | 0.306 | 0.027 | -0.077 | -0.153 | 0.377 | 0.377 | 0.098 |
-| Microsoft Azure vs Google Cloud | 1.257 | -0.338 | 0.081 | 0.000 | 0.000 | 0.565 | 0.754 | 0.196 |
+| Google Cloud vs Microsoft Azure | 0.340 | 0.324 | 0.016 | 0 | 0 | 0 | 0 | 0 |
+| Google Cloud vs AWS | 1.330 | 0.644 | 0 | 0 | 0 | 0.686 | 0 | 0 |
+
+What the rankings show:
+1. With real data the compliance-sensitive buyer gets the same recommendation as the cost-sensitive buyer
+   (Google Cloud), because the three providers do not differ on attestations, backup/DR, SLA or SAP tooling.
+   The compliance preset mainly shrinks the gaps (Azure 0.34 behind instead of 1.98).
+2. The gap to Azure comes almost only from cost; the gap to AWS from cost and the number of EU regions.
+3. The result depends on the profile, not only on the weights: below about 768 GB memory, or with a provider-specific
+   discount, another provider wins (notes/validation.md, Table 4.2). So the dominance holds for the reference
+   profile only, which is consistent with H1.
+4. The checklists use yes/no items at the level of "does the provider offer it". Finer differences (for example how
+   many services are in audit scope, or how mature a tool is) are not measured. [TODO: name as a limitation.]
 
 ## 7. Open items
 
-- [TODO: replace data/criteria_demo.csv and data/normalisation_demo.csv with real files, then update Tables 7-10.]
 - [CITATION NEEDED: Saaty scale and AHP; random index values; TOPSIS (Hwang and Yoon 1981).]
 - [CITATION NEEDED: AHP "ratings" mode, where alternatives are scored on a scale instead of compared pairwise.]
-- [TODO: Sensitivity tab (switch-points) with real scores; on demo data, cost preset: C1.1 switch-point at 26.2%
-  (Microsoft Azure below, Google Cloud above).]
+- [CITATION NEEDED: scoring a value relative to the best value (1 + 8 x value / best) as a normalisation method.]

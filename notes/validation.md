@@ -4,8 +4,11 @@ Status: Chat 6, 2026-11-23 to 2026-11-26. All three vectors and the switch-point
 Purpose: test the tool along three validation vectors: (1) correctness of the cost engine against a vendor
 calculator, (2) documented migration cases, (3) a practitioner walkthrough. Section 4 adds the sensitivity
 sweep and its switch-points.
-Important: the criteria scores for six of the seven criteria are still DEMO values (data/criteria_demo.csv), so all
-rankings, case results and switch-points below are provisional until real scores exist.
+Update Chat 2 (2026-11-26): all seven criteria now use real data (data/criteria.csv, data/normalisation.csv).
+The case results (section 2) and switch-points (section 4) were re-run with the real scores; the demo results of
+Chat 6 are replaced. Second update (2026-11-26): the reference profile memory is now 1,200 GB (2 x data, SAP
+sizing rule) instead of 900 GB; sections 2 and 4 were re-run with it. The calculator checks in section 1 were done
+at the old 1,024 GiB step; they check the engine's prices and arithmetic and were not repeated.
 
 ## 1. Vector 1: cost engine compared with a vendor calculator
 
@@ -67,11 +70,36 @@ EUR values use the ECB rate of data/prices.csv for Azure (1.1193 USD per EUR, 20
 |---|---|---|---|---|---|
 | AWS (Chat 4, without support) | 2026-11-20 | 6,966.73 | 6,950.53 | +0.23% | snapshot change rate |
 | Microsoft Azure (with support) | 2026-11-26 | 6,822.40 | 6,831.10 | -0.13% | free 100 GB egress |
+| Google Cloud (with support) | 2026-11-26 | 5,931.48 | 5,931.48 | 0.00% | none (see 1.6) |
 
-For both providers the engine reproduces the vendor calculator within 0.25%. Compute, which is about 97% of the
-monthly cost, matches to the cent for both. The remaining differences come from two simplifications that are
-documented in the price rows (free egress allowance not deducted; one full snapshot copy). Neither changes the
-cost order of the providers. Google Cloud was not checked against its calculator [TODO: state as a limitation].
+For all three providers the engine reproduces the vendor calculator within 0.25%. Compute, which is about 97% of
+the monthly cost, matches to the cent for all three. The remaining differences come from two simplifications that
+are documented in the price rows (free egress allowance not deducted; one full snapshot copy). Neither changes the
+cost order of the providers.
+
+### 1.6 Google Cloud check (Chat 2, 2026-11-26)
+
+Entered by Claude in the public Google Cloud Pricing Calculator (https://cloud.google.com/products/calculator)
+on 2026-11-26, at Eva's request, currency USD, not signed in (list prices). Shareable estimate:
+https://cloud.google.com/products/calculator/estimate-preview/CiQ0ZTkwZDRjNi1jYWUyLTQwZWUtOTNkNy05ZmEyMTkyMjFhZTcQAQ%3D%3D
+Evidence: five screenshots in the project files under chat2b/evidence/ (gcp-calc_1_compute, _2_hyperdisk,
+_3_snapshot, _4_network, _5_support).
+
+| Calculator card | Settings entered | Price row | Calculator (USD/month) | Engine (USD/month) | Difference |
+|---|---|---|---|---|---|
+| Compute Engine | 1 x m3-ultramem-32 (Memory-optimized, M3; 32 vCPUs, 976 GiB), Frankfurt (europe-west3), free OS (Linux), Regular, 730 h, no committed use, boot disk 0 GiB | GC-C2 | 5,240.45 | 5,240.45 | 0.00 |
+| Hyperdisk and Persistent Disk (1) | Hyperdisk, Frankfurt, Hyperdisk Balanced, 1 disk x 600 GiB, 3,000 IOPS, 140 MiB/s (included baseline) | GC-S1 | 56.40 | 56.40 | 0.00 |
+| Hyperdisk and Persistent Disk (2) | Persistent Disk, Frankfurt, Snapshot Storage 600 GiB | GC-B1 | 35.40 | 35.40 | 0.00 |
+| Networking | Data Transfer, Premium tier, 500 GiB internet egress, Frankfurt to Europe | GC-N1 | 60.00 | 60.00 | 0.00 |
+| Support Services | Enhanced, based on the current estimate total | GC-M1 | 539.23 | 539.23 | 0.00 |
+| **Total** | | | **5,931.48** | **5,931.48** | **0.00 (0.00%)** |
+| Same in EUR (/ 1.1081) | | | 5,352.80 | 5,352.80 | 0.00 |
+
+Why there is no difference on Google Cloud: the calculator prices snapshots as stored GiB x price (the engine's
+"one full copy" rule), shows no free egress allowance for Premium Tier internet egress to Europe, and calculates
+Enhanced support as 10% of the estimate (the engine's first-tier rule; the 100 USD minimum does not apply at this
+size). Note: the calculator's region list for M3 machines contains Frankfurt; the default 10 GiB boot disk
+(0.94 USD/month) was set to 0 because the engine has no boot disk.
 
 ### 1.5 Text for the thesis (draft)
 
@@ -80,7 +108,9 @@ the public Azure Pricing Calculator on 2026-11-26 [CITATION NEEDED: Azure Pricin
 The calculator gave 6,822.40 USD per month for compute, disk storage, snapshots, internet egress and Standard
 support, against 6,831.10 USD from the engine (-0.13%). All parts matched exactly except internet egress, where
 the calculator deducts a free allowance of 100 GB per month that the engine does not. Together with the AWS check
-(+0.23%), this shows that the engine reproduces vendor calculators within 0.25% for the reference profile.
+(+0.23%) and the Google Cloud check (0.00%, all five parts identical; Google Cloud Pricing Calculator, accessed
+2026-11-26), this shows that the engine reproduces the calculators of all three providers within 0.25% for the
+reference profile.
 
 ## 2. Vector 2: documented cases
 
@@ -92,10 +122,9 @@ cannot see.
 ### 2.1 How each case was run
 
 None of the sources states the HANA memory size, data volume or network traffic. Each case was therefore run with
-the reference profile (notes/reference_profile.md: 600 GB data, 900 GB memory, 10% growth, 500 GB/month, 5 years,
+the reference profile (notes/reference_profile.md: 600 GB data, 1,200 GB memory, 10% growth, 500 GB/month, 5 years,
 EU Frankfurt, list price) and only the values given by the source were changed. The weight preset was chosen from
-the reasons the source gives. Run on 2026-11-26 with the Chat 6 page; six of seven criteria scores are DEMO values,
-so the rankings are provisional.
+the reasons the source gives. Re-run on 2026-11-26 with the Chat 2 page and the real criteria scores.
 
 | Case | Values changed from the reference profile | Preset |
 |---|---|---|
@@ -105,30 +134,33 @@ so the rankings are provisional.
 
 ### 2.2 Case table
 
-Table 2.2: tool recommendation compared with the documented choice (source: page run on 2026-11-26, notes/validation_cases.md).
+Table 2.2: tool recommendation compared with the documented choice (source: page re-run on 2026-11-26 with real criteria data, notes/validation_cases.md).
 
 | Case | Source type | Tool recommends | Company chose | Match | Factor outside the model |
 |---|---|---|---|---|---|
-| A VHV Group (insurance, Germany) | Vendor-published (AWS partner story) | Google Cloud (AWS ranked 3rd) | AWS | No | Existing relationship: AWS was already the "preferred server-workload cloud provider"; migration funding (AWS Migration Acceleration Program) through the partner; urgency from a hardware shortage. The switch-point table shows that a discount of 19.2% given only by AWS would make AWS the recommendation, a size that program funding or a negotiated deal could plausibly reach [CITATION NEEDED: typical size of migration funding]. |
+| A VHV Group (insurance, Germany) | Vendor-published (AWS partner story) | Google Cloud (AWS ranked 3rd) | AWS | No | Existing relationship: AWS was already the "preferred server-workload cloud provider"; migration funding (AWS Migration Acceleration Program) through the partner; urgency from a hardware shortage. The switch-point table shows that a discount of 21.9% given only by AWS would make AWS the recommendation, a size that program funding or a negotiated deal could plausibly reach [CITATION NEEDED: typical size of migration funding]. |
 | B Arvato (logistics, Bertelsmann) | Vendor-published (Microsoft) + partner-published (Arvato Systems) | No recommendation (NA): no machine in data/prices.csv is larger than 4 TiB, so compute is NA for all three providers | Microsoft Azure | Not testable | Model limit: the price data covers machines up to 4 TiB, the case uses VMs up to 6 TB. Outside the model as well: existing Microsoft ecosystem (Microsoft 365, Teams, Power BI), explicit choice of one platform "versus being multicloud", top-down decision. |
-| C Deutsche Börse (exchange operator, Frankfurt) | Vendor-published (customer-written post on Google's blog) + independent media (The Stack 2024, CIO.de 2025) | Compliance-sensitive: Microsoft Azure (Google Cloud 3rd in AHP, 2nd in TOPSIS). Cost-sensitive: Google Cloud | Google Cloud | No (compliance preset); Yes (cost preset) | Strategic partnership with Google Cloud announced in 2023 and Google as "preferred cloud platform" (independent sources); security features the criteria do not measure (encryption at three levels with customer-held keys). In the compliance preset the cost weight would have to rise from 8.1% to 29.2% for Google Cloud to win. |
+| C Deutsche Börse (exchange operator, Frankfurt) | Vendor-published (customer-written post on Google's blog) + independent media (The Stack 2024, CIO.de 2025) | Compliance-sensitive: Google Cloud (AHP and TOPSIS). Cost-sensitive: Google Cloud | Google Cloud | Yes (both presets) | The model reproduces the choice, but for its own reasons (lowest cost, most EU regions together with Azure); the sources name other reasons as well: strategic partnership with Google Cloud announced in 2023 and Google as "preferred cloud platform" (independent sources), and security features the criteria do not measure (encryption at three levels with customer-held keys). With demo data (Chat 6) the compliance preset had recommended Azure. |
 
 ### 2.3 What the cases show
 
-1. **Commercial and organisational factors decide where the model disagrees.** In both testable mismatches
-   (A and C) the sources name a prior relationship or strategic partnership with the chosen provider. This
-   supports H2: the criteria model can reproduce a choice when it is cost-driven (C with the cost preset), and
-   the mismatches point to factors outside the model (relationship, funding, ecosystem).
+1. **Commercial and organisational factors decide where the model disagrees.** In the one testable mismatch (A)
+   the source names a prior relationship and migration funding with the chosen provider. Case C is now a match in
+   both presets. This supports H2: the criteria model reproduces a choice that fits its cost and residency
+   criteria (C), and the mismatch points to factors outside the model (relationship, funding).
 2. **The switch-points make the outside factor measurable.** For VHV the tool can say how large an AWS-only
-   discount would have to be (19.2%) to change the recommendation.
+   discount would have to be (21.9%) to change the recommendation.
 3. **A defect was found and fixed.** Before the fix, the Arvato run (6 TB) still produced a ranking, because the
    cost score was calculated from totals that left out compute (no machine large enough). Those totals were
    not comparable. Since Chat 6, a provider without a compute price gets cost score NA (App.comparableTotal in
-   js/app.js), and the page shows "no recommendation" instead of a wrong one.
-4. **Limits of this vector.** All three sources are written by or with the vendor, except the two independent
-   articles for case C; none states the database size, so the company profiles are partly the reference profile;
-   the criteria scores are still DEMO. The case results must be re-run when real scores exist.
-   [TODO: re-run with real criteria scores.]
+   js/app.js), and the page shows "no recommendation" instead of a wrong one. Still NA with real data, because
+   data/prices.csv stops at 4 TiB although all three providers have certified machines up to about 30-32 TiB (C1.2).
+4. **Real data changed one case result.** With demo scores, case C (compliance preset) was a mismatch; with real
+   scores it is a match. The demo scores had given Azure an invented lead on attestations and tooling.
+5. **Limits of this vector.** All three sources are written by or with the vendor, except the two independent
+   articles for case C; none states the database size, so the company profiles are partly the reference profile.
+   Two of three testable runs recommend Google Cloud for every preset, because Google Cloud dominates the
+   reference profile (notes/mcda_results.md, section 6).
 
 ## 3. Vector 3: practitioner walkthrough
 
@@ -176,70 +208,77 @@ is changed at a time; everything else stays as in the form. Weights: the weight 
 100% in steps of 1%, the other weights keep their proportions, and the exact switch-point is found by halving the
 interval 30 times. Cost drivers: one input of the cost model is changed, costs and the cost score C1.1 are
 recalculated, the weights stay the same. Checked in tests.html (group "Sensitivity", 10 checks, hand example:
-switch-point at weight 0.4).
-All values: reference profile, run on 2026-11-26. **Provisional: six of seven criteria scores are DEMO values.**
+switch-point at weight 0.4). Chat 2: a tie at the top (for example when a criterion on which all providers score 9 gets
+100% of the weight) is not counted as a switch-point (Sens.TIE, 2 more checks).
+All values: reference profile, re-run on 2026-11-26 with the real criteria scores.
 
 ### 4.1 Weights
 
-Table 4.1: weight switch-points (source: page, tab 4, reference profile).
+Table 4.1: weight switch-points (source: page, tab 4, reference profile, real data).
 
-| Criterion | Cost-sensitive: weight now | Switch-point | Winner then | Compliance-sensitive: weight now | Switch-point | Winner then |
-|---|---|---|---|---|---|---|
-| Current recommendation | | | Google Cloud | | | Microsoft Azure |
-| C1.1 Certified compute price (5-year cost) | 47.7% | 26.2% | Microsoft Azure | 8.1% | 29.2% | Google Cloud |
-| C1.2 Certified scale-up range | 9.5% | 35.8% | Microsoft Azure | 2.7% | none | - |
-| C2.1 Multi-zone SLA | 10.5% | 78.7% | AWS | 7.7% | 52.8% | AWS |
-| C2.2 HANA backup and DR | 10.5% | 78.7% | AWS | 15.3% | 56.7% | AWS |
-| C3.1 EU regions | 5.5% | 32.9% | Microsoft Azure | 18.8% | none | - |
-| C3.2 Compliance attestations | 5.5% | 41.4% | Microsoft Azure | 37.7% | none | - |
-| C4.1 SAP tooling | 10.9% | 44.8% | Microsoft Azure | 9.8% | none | - |
+| Criterion | Cost-sensitive: weight now | Switch-point | Compliance-sensitive: weight now | Switch-point |
+|---|---|---|---|---|
+| Current recommendation | Google Cloud | | Google Cloud | |
+| C1.1 Certified compute price (5-year cost) | 47.7% | none (0-100%) | 8.1% | none (0-100%) |
+| C1.2 Certified scale-up range | 9.5% | none | 2.7% | none |
+| C2.1 Multi-zone SLA | 10.5% | none | 7.7% | none |
+| C2.2 HANA backup and DR | 10.5% | none | 15.3% | none |
+| C3.1 EU regions | 5.5% | none | 18.8% | none |
+| C3.2 Compliance attestations | 5.5% | none | 37.7% | none |
+| C4.1 SAP tooling | 10.9% | none | 9.8% | none |
 
-In both presets the most sensitive weight is C1.1 (cost): about 21 percentage points away from a switch. No other
-weight is closer than 26 points (cost preset) or 41 points (compliance preset).
+No weight change can move Google Cloud from first place, because Google Cloud scores at least as high as both
+other providers on every criterion for the reference profile. With 100% weight on C1.2, C2.1, C2.2, C3.1, C3.2 or
+C4.1, Google Cloud ties with one or both others; a tie is not a switch.
 
 ### 4.2 Cost drivers
 
-Table 4.2: cost-driver switch-points (source: page, tab 4, reference profile).
+Table 4.2: cost-driver switch-points (source: page, tab 4, reference profile, real data).
 
 | Cost driver | Value now | Range tested | Cost-sensitive: switch-point | Compliance-sensitive: switch-point |
 |---|---|---|---|---|
-| Extra discount given only by AWS | 0% | 0-60% | 19.2% (Google Cloud to AWS) | none |
-| Extra discount given only by Microsoft Azure | 0% | 0-60% | 7.5% (Google Cloud to Azure) | none |
-| Extra discount given only by Google Cloud | 0% | 0-60% | none (already first) | none |
+| Extra discount given only by AWS | 0% | 0-60% | 21.9% (Google Cloud to AWS) | none |
+| Extra discount given only by Microsoft Azure | 0% | 0-60% | 12.4% (Google Cloud to Azure) | 12.6% (Google Cloud to Azure) |
+| Extra discount given only by Google Cloud | 0% | 0-60% | none (already first) | none (already first) |
 | Same discount from all providers | 0% | 0-60% | none | none |
-| SAP HANA memory size | 900 GB | 256-4,096 GB | between 512 and 768 GB (Azure below, Google Cloud above) | none |
+| SAP HANA memory size | 1,200 GB | 256-4,096 GB | between 512 and 768 GB (Azure below, Google Cloud above) | between 512 and 768 GB (Azure below, Google Cloud above) |
 | Data growth per year | 10% | 0-50% | none | none |
-| Outbound traffic per month | 500 GB | 0-20,000 GB | 13,549 GB (Google Cloud to Azure) | none |
+| Outbound traffic per month | 500 GB | 0-20,000 GB | none | none |
 | Evaluation period | 5 years | 1-10 | none | none |
 
 ### 4.3 What the switch-points show
 
-1. **A discount that all providers give hardly matters; a discount from one provider does.** The cost score
-   compares the providers with each other (cheapest = 9, most expensive = 1), so equal discounts leave the order
-   unchanged. An AWS-only discount of 19.2% or an Azure-only discount of 7.5% changes the cost-sensitive
-   recommendation. This links the model to the commercial factors found in Vector 2 (negotiated deals,
-   migration funding).
-2. **Machine size is a real driver.** Below about 768 GB of HANA memory, Azure is recommended instead of
-   Google Cloud, because Google Cloud's certified 512 GiB machine is relatively expensive (see Chat 4). This
-   supports H1: no provider is best for every profile.
-3. **The compliance-sensitive recommendation is robust.** No cost driver in the tested range and only three of
-   seven weights can change it, and only with large moves (21 points or more).
-4. **Growth, years and (up to 13.5 TB a month) traffic do not change the recommendation** for this profile.
+1. **Weights do not change the recommendation for this profile; the profile and the price do.** Because the
+   providers tie on four criteria and Google Cloud is cheapest and has the most EU regions (with Azure), no
+   weighting makes another provider win. The recommendation changes only through cost drivers.
+2. **A discount that all providers give hardly matters; a discount from one provider does.** An Azure-only
+   discount of about 12.4% or an AWS-only discount of 21.9% changes the cost-sensitive recommendation. This links
+   the model to the commercial factors found in Vector 2 (negotiated deals, migration funding).
+3. **Machine size is a real driver.** Below about 768 GB of HANA memory, Azure is recommended instead of
+   Google Cloud in both presets, because Google Cloud's certified 512 GiB machine is relatively expensive
+   (see Chat 4). This supports H1: no provider is best for every profile.
+4. **The compliance preset is no longer different from the cost preset.** With demo data it recommended Azure and
+   was robust; with real data it recommends Google Cloud and reacts to the same cost drivers, except an AWS-only
+   discount (AWS also has fewer EU regions).
+5. **Growth, years and traffic (0-20,000 GB a month) do not change the recommendation** for this profile. With the
+   old 900 GB profile Azure won above about 18.8 TB a month; with 2,048 GiB machines the compute gap is too large.
 
 ### 4.4 Text for the thesis (draft)
 
-A one-at-a-time sensitivity analysis was run on the reference profile [Table 4.1, Table 4.2]. With the
-cost-sensitive preset, the recommendation (Google Cloud) changes when the weight of the cost criterion falls from
-47.7% to 26.2%, when HANA memory is below about 768 GB, when outbound traffic exceeds about 13.5 TB per month, or
-when a single provider grants an extra discount of 7.5% (Azure) or 19.2% (AWS). With the compliance-sensitive
-preset, the recommendation (Microsoft Azure) changes only through large weight changes. Because six criteria
-still use demonstration scores, these switch-points are provisional [TODO: re-run with real criteria scores].
+A one-at-a-time sensitivity analysis was run on the reference profile [Table 4.1, Table 4.2]. For this profile,
+Google Cloud scores at least as high as the other providers on every criterion, so no change of a single weight
+alters the recommendation in either preset. The recommendation does change with the company profile and with
+provider-specific prices: below about 768 GB of HANA memory Microsoft Azure is recommended, and an extra discount
+granted by a single provider of about 12.4% (Azure) or 21.9% (AWS, cost-sensitive preset only) changes the
+recommendation. Traffic up to 20 TB per month does not. The ranking is therefore
+driven by cost and profile rather than by the weighting of the qualitative criteria, which mostly do not
+differentiate the three providers [Table 7 in notes/mcda_results.md].
 
 ## 5. Summary
 
 | Vector | Result | Status |
 |---|---|---|
-| 1 Calculator | Engine within 0.25% of the AWS (+0.23%) and Azure (-0.13%) calculators; compute matches to the cent | Done; Google Cloud not checked [TODO: limitation] |
-| 2 Cases | 3 cases (AWS, Azure, Google Cloud): 2 mismatches explained by relationship/partnership factors, 1 not testable (6 TB above price data); one defect found and fixed | Done; Eva to confirm extraction; provisional (DEMO scores) |
+| 1 Calculator | Engine within 0.25% of the AWS (+0.23%), Azure (-0.13%) and Google Cloud (0.00%) calculators; compute matches to the cent | Done |
+| 2 Cases | 3 cases (AWS, Azure, Google Cloud), real data: 1 match (Deutsche Börse, both presets), 1 mismatch explained by relationship/funding (VHV), 1 not testable (6 TB above price data); one defect found and fixed | Done; Eva to confirm extraction [TODO] |
 | 3 Practitioners | Session outline, 8 questions, answer form | Questions ready; sessions [TODO] |
-| Switch-points | Tables 4.1 and 4.2; shown in tab 4 | Done; provisional (DEMO scores) |
+| Switch-points | Tables 4.1 and 4.2 (real data); shown in tab 4 | Done |

@@ -61,7 +61,7 @@ no reason for choosing Azure stated; operating costs about 20% lower.
 
 None of the sources states the HANA memory size, data volume or traffic. So the company profile for each case
 can only partly come from the source. Approach (agreed by Eva on 2026-11-26):
-- Run each case with the **reference profile** (600 GB data, 900 GB memory, Frankfurt, list price) and change only
+- Run each case with the **reference profile** (600 GB data, 1,200 GB memory (2 x data, since 2026-11-26), Frankfurt, list price) and change only
   what the source gives. For Arvato: memory 6,144 GB ("up to 6 TB"), which is above the largest machine in
   data/prices.csv (4 TiB), so the page will show compute as NA. That is itself a result: the tool's price data does not cover
   the largest SAP landscapes.

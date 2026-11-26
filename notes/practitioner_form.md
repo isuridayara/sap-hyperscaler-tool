@@ -25,7 +25,7 @@ possible; mark your own notes with [note]. Do not correct or summarise what the 
 | T2 | Enter a company they know (or keep the reference profile) and press Calculate | | |
 | T3 | In tab 1, find the cheapest provider and say which part of the cost they would check first | | |
 | T4 | In tab 3, switch between the Cost-sensitive and Compliance-sensitive presets and explain why the ranking changes | | |
-| T5 | In tab 4, find the most sensitive weight and one cost switch-point | | |
+| T5 | In tab 4, check whether any weight change alters the recommendation, and find one cost switch-point | | |
 
 ## C. Questions
 
@@ -36,7 +36,7 @@ Ask in this order. Rating questions: 1 = strongly disagree ... 5 = strongly agre
 | Q1 | Are the cost parts (compute, storage, backup, network, support) the ones that drive the cost of running S/4HANA on a hyperscaler? What is missing that would change the order of the providers? | | | |
 | Q2 | Are the seven criteria (certified compute price, scale-up range, multi-zone SLA, HANA backup/DR, EU regions, compliance attestations, SAP tooling) the ones you would use to compare providers? Which would you remove or add? | 1-5: "The criteria cover what matters." | | |
 | Q3 | Look at the two weight presets. Do they reflect how a cost-driven and a compliance-driven company would really weigh the criteria? | 1-5: "The presets are realistic." | | |
-| Q4 | In tab 4, the recommendation changes if one provider gives about 7-20% extra discount. In your experience, how large are negotiated discounts, migration funding or existing commitments compared with that? | | | |
+| Q4 | In tab 4, the recommendation changes if one provider gives about 12-22% extra discount (Azure about 12.4%, AWS about 21.9%). In your experience, how large are negotiated discounts, migration funding or existing commitments compared with that? | | | |
 | Q5 | When a customer you know chose a hyperscaler for SAP, which factors decided it in the end? Which of these does the tool not show? | | | |
 | Q6 | Is the output (cost range, criteria matrix, ranking with contributions, switch-points) understandable without explanation? What was hardest to read? | 1-5: "I understood the results without help." | | |
 | Q7 | At which point in a real decision would this tool help (first shortlist, business case, final selection), and who would use it? | 1-5: "The tool would be useful for a first comparison." | | |
