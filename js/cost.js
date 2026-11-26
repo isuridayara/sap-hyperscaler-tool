@@ -4,7 +4,7 @@
 // that part becomes null and is shown as "NA" on the page. Nothing is guessed.
 // The total adds up only the parts that have a price; the parts that are NA are
 // listed in "missing" so the page can say what the total leaves out
-// (decision by Eva, 2026-11-01, see notes/decisions.md).
+// (decision by Dayara, 2026-11-01, see notes/decisions.md).
 
 var Cost = {};
 
@@ -97,7 +97,7 @@ Cost.yearCost = function (prices, provider, profile, yearNumber, growthPct, disc
   };
 
   // Support given as a percentage: percent x (the year's running costs),
-  // but at least the monthly minimum x 12. First tier only (decision by Eva, 2026-11-04).
+  // but at least the monthly minimum x 12. First tier only (decision by Dayara, 2026-11-04).
   if (Cost.isPercentRow(managedRow) && pManaged !== null) {
     var running = [y.compute, y.storage, y.backup, y.network];
     if (running.indexOf(null) >= 0) {

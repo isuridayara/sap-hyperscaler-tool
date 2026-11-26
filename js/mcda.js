@@ -1,7 +1,7 @@
 // mcda.js - turning scores and weights into a ranking (Chat 5 version).
 // 1. AHP: weights from pairwise comparisons (Saaty 1-9 scale), principal eigenvector,
 //    consistency ratio CR (must be below 0.1). Used in two levels: 4 groups, then the
-//    sub-criteria inside each group (decision by Eva, 2026-11-20).
+//    sub-criteria inside each group (decision by Dayara, 2026-11-20).
 // 2. Ranking: weighted sum (weight x score), with the contribution of each criterion.
 // 3. TOPSIS: cross-check ranking. If it disagrees with the weighted sum, that is a finding.
 // All scores here are on the 1-9 scale where 9 is best.
@@ -96,7 +96,7 @@ Mcda.ahpWeights = function (matrix) {
 // Group of a criterion: the part before the dot, so "C1.2" belongs to group "C1".
 Mcda.groupOf = function (criterionId) { return String(criterionId).split(".")[0]; };
 
-// Two-level AHP (the hierarchy Eva chose on 2026-11-20).
+// Two-level AHP (the hierarchy Dayara chose on 2026-11-20).
 // criterionIds: e.g. ["C1.1", "C1.2", "C2.1", ..., "C4.1"]
 // judgments: rows of data/pairwise.csv for ONE preset:
 //   { matrix: "groups" or a group id like "C1", row: ..., col: ..., value: number }

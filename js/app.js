@@ -9,7 +9,7 @@
 var App = {};
 
 // Which data files the page loads. A file name with "_demo" switches on the red DEMO notice.
-// pairwise.csv holds Eva's AHP judgments for the two presets (real decisions, not demo).
+// pairwise.csv holds Dayara's AHP judgments for the two presets (real decisions, not demo).
 App.FILES = {
   prices: "data/prices.csv",
   normalisation: "data/normalisation.csv",
@@ -181,7 +181,7 @@ App.importance = function () {
 };
 
 // AHP weights for the chosen preset.
-// - cost / compliance: the two-level AHP from Eva's judgments in data/pairwise.csv.
+// - cost / compliance: the two-level AHP from Dayara's judgments in data/pairwise.csv.
 // - user: one importance value per criterion (simple, always consistent).
 // Returns { weights: { "C1.1": ... }, hierarchy (or null), flat (or null), consistent, error }.
 App.presetWeights = function (preset, ids) {
@@ -708,7 +708,7 @@ App.DEMO_TABS = {
   pairwise: ["tab-result", "tab-sensitivity"]
 };
 
-// Red DEMO notices (decision by Eva, 2026-11-18):
+// Red DEMO notices (decision by Dayara, 2026-11-18):
 // - demo prices file: the red banner at the top of the page, as before;
 // - demo criteria files: a red notice at the top of each tab that uses them,
 //   and "(DEMO)" on its tab button. The Cost tab stays clean when the prices are real.
