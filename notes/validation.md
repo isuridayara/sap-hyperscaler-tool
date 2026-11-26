@@ -115,7 +115,7 @@ reference profile.
 ## 2. Vector 2: documented cases
 
 Three publicly documented migrations of SAP to a hyperscaler, one per provider. Extraction sheet with all quotes and
-links: notes/validation_cases.md. [TODO: Eva to confirm each extracted line against the source.]
+links: notes/validation_cases.md. All extracted lines were checked against the source pages on 2026-11-26; small wording corrections are marked there.
 A mismatch between the tool and the company's choice is a result, not a failure: it names a factor that the model
 cannot see.
 
@@ -128,7 +128,7 @@ the reasons the source gives. Re-run on 2026-11-26 with the Chat 2 page and the 
 
 | Case | Values changed from the reference profile | Preset |
 |---|---|---|
-| A VHV Group | none | Cost-sensitive (capital expenditure and cost savings are named) |
+| A VHV Group | none | Cost-sensitive (capital expenditure and cost savings are named; the page calls speed and innovation the main driver, but Google Cloud ranks first under any weights for this profile, so the preset does not change the result) |
 | B Arvato | HANA memory 6,144 GB ("up to 6 TB" VMs) | Cost-sensitive and Compliance-sensitive |
 | C Deutsche Börse | none | Compliance-sensitive (regulators, encryption, own keys are named); Cost-sensitive as a check |
 
@@ -279,6 +279,6 @@ differentiate the three providers [Table 7 in notes/mcda_results.md].
 | Vector | Result | Status |
 |---|---|---|
 | 1 Calculator | Engine within 0.25% of the AWS (+0.23%), Azure (-0.13%) and Google Cloud (0.00%) calculators; compute matches to the cent | Done |
-| 2 Cases | 3 cases (AWS, Azure, Google Cloud), real data: 1 match (Deutsche Börse, both presets), 1 mismatch explained by relationship/funding (VHV), 1 not testable (6 TB above price data); one defect found and fixed | Done; Eva to confirm extraction [TODO] |
+| 2 Cases | 3 cases (AWS, Azure, Google Cloud), real data: 1 match (Deutsche Börse, both presets), 1 mismatch explained by relationship/funding (VHV), 1 not testable (6 TB above price data); one defect found and fixed | Done; sources checked 2026-11-26 |
 | 3 Practitioners | Session outline, 8 questions, answer form | Questions ready; sessions [TODO] |
 | Switch-points | Tables 4.1 and 4.2 (real data); shown in tab 4 | Done |
